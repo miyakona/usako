@@ -149,7 +149,7 @@ class NotifyHouseworkSummary extends commandBase { // eslint-disable-line no-unu
     weeklyBeginning.setDate(dt.getDate() - 8);
 
     const formatDate = (date) => {
-      return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+      return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
     };
 
     const term = `${formatDate(weeklyBeginning)} 〜 ${formatDate(new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - 1))}`;
@@ -185,6 +185,8 @@ ${graph}`;
     return message;
   }
 }
+
+module.exports = NotifyHouseworkSummary;
 
 function notifyHouseworkSummary () { // eslint-disable-line no-unused-vars
   const batch = new NotifyHouseworkSummary();

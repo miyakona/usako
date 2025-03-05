@@ -180,6 +180,8 @@ ${graph}`;
   }
 }
 
+module.exports = AccountBookSummary;
+
 function accountBookSummary () { // eslint-disable-line no-unused-vars
   const batch = new AccountBookSummary();
   batch.main();
