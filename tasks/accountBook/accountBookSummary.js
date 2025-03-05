@@ -101,7 +101,8 @@ ${accountBook.getSummary()}`);
     for (let key in currentData) {
       if (key == '日付') {
         let dt = new Date();
-        let date = `${Number(dt.getFullYear())}/${String(("0"+(dt.getMonth() + 2)).slice(-2))}`
+        let nextMonth = new Date(dt.getFullYear(), dt.getMonth() + 1, 1);
+        let date = `${nextMonth.getFullYear()}/${String(("0"+(nextMonth.getMonth() + 1)).slice(-2))}`
         summarySheet.getRange(Number(map[key]) + 1, lastColumn).setValue(date);
       } else {
         summarySheet.getRange(Number(map[key]) + 1, lastColumn).setValue(`=SUMIF('家計簿_今月'!$D:$D,"${key}",'家計簿_今月'!$E:$E) `);

@@ -71,7 +71,8 @@ class AccountBook { // eslint-disable-line no-unused-vars
   getMessage(action) {
     Logger.log('called ' + this.constructor.name + ':getMessage()');
     const dt = new Date();
-    const month = (dt.getDate() > 26) ?  dt.getMonth() + 2 : dt.getMonth() + 1;
+    const nextMonth = new Date(dt.getFullYear(), dt.getMonth() + 1, 1);
+    const month = (dt.getDate() > 26) ? nextMonth.getMonth() + 1 : dt.getMonth() + 1;
 
     const remindComment = '出費は毎月25日までに報告してね！26日に支払い金額を通知するよ！';
     switch(action) {

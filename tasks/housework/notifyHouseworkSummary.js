@@ -145,10 +145,14 @@ class NotifyHouseworkSummary extends commandBase { // eslint-disable-line no-unu
    */
   getFormattedMessage(user1, user2, summary, graph) {
     const dt = new Date();
-    let weeklyBeginning = new Date();
+    let weeklyBeginning = new Date(dt);
     weeklyBeginning.setDate(dt.getDate() - 8);
 
-    const term = `${weeklyBeginning.getFullYear()}/${weeklyBeginning.getMonth() + 1}/${weeklyBeginning.getDate()} 〜 ${dt.getFullYear()}/${dt.getMonth() + 1}/${dt.getDate() - 1}`;
+    const formatDate = (date) => {
+      return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+    };
+
+    const term = `${formatDate(weeklyBeginning)} 〜 ${formatDate(new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - 1))}`;
 
     var message = `今週の家事実績報告！
 ${term}
