@@ -71,15 +71,23 @@ class AccountBook { // eslint-disable-line no-unused-vars
   getMessage(action) {
     Logger.log('called ' + this.constructor.name + ':getMessage()');
     const dt = new Date();
-    const nextMonth = new Date(dt.getFullYear(), dt.getMonth() + 1, 1);
-    const month = (dt.getDate() > 26) ? nextMonth.getMonth() + 1 : dt.getMonth() + 1;
+    let year = dt.getFullYear();
+    let month = dt.getMonth() + 1;
+
+    if (dt.getDate() >= 26) {
+      month += 1;
+      if (month > 12) {
+        month = 1;
+        year += 1;
+      }
+    }
 
     const remindComment = '出費は毎月25日までに報告してね！26日に支払い金額を通知するよ！';
     switch(action) {
       // 家計簿に記入
       case 'report':
         return `家計の報告だね！
-${this.formUrl}?usp=pp_url&entry.220269951=${dt.getFullYear()}&entry.1155173829=${month}`;
+${this.formUrl}?usp=pp_url&entry.220269951=${year}&entry.1155173829=${String(month).padStart(2, '0')}`;
       // サマリの中間報告
       case 'summary' :
       return `現時点での支払内容はこんな感じだよ！
@@ -265,3 +273,5 @@ ${this.user2}さん支払い分 : ${payment['user2']}円
     return this.graph;
   }
 }
+
+module.exports = AccountBook;
