@@ -26,7 +26,7 @@ class ArchiveHouseworks extends commandBase { // eslint-disable-line no-unused-v
 
     // 年月(YYYYMM)の名前でシートをアーカイブ
     const thisMonth = dt.getMonth() == 0 ? 12 : dt.getMonth();
-    const thisYear  = thisMonth == 12 ? dt.getFullYear() - 1: dt.getFullYear();
+    const thisYear  = dt.getMonth() == 0 ? dt.getFullYear() - 1 : dt.getFullYear();
     const prefix = '家事代_';
     SpreadsheetApp.getActiveSpreadsheet().duplicateActiveSheet().setName(`${prefix}${String(thisYear)}${String(("0"+(thisMonth)).slice(-2))}`);
 
