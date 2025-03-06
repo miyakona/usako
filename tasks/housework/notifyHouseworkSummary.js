@@ -144,6 +144,7 @@ class NotifyHouseworkSummary extends commandBase { // eslint-disable-line no-unu
    * @param string graph グラフの URL
    */
   getFormattedMessage(user1, user2, summary, graph) {
+    Logger.log('called ' + this.constructor.name + ':getFormattedMessage()');
     const dt = new Date();
     let weeklyBeginning = new Date(dt);
     weeklyBeginning.setDate(dt.getDate() - 8);
