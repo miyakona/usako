@@ -1,6 +1,11 @@
 # usako
 
 [![Coverage](https://img.shields.io/badge/coverage-71.25%25-brightgreen)](https://github.com/miyakona/usako/actions/workflows/test.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=miyakona_usako&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=miyakona_usako)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=miyakona_usako&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=miyakona_usako)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=miyakona_usako&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=miyakona_usako)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=miyakona_usako&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=miyakona_usako)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=miyakona_usako&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=miyakona_usako)
 
 家計簿管理のためのLINEボットアプリケーション
 
