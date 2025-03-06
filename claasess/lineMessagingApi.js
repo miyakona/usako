@@ -145,3 +145,5 @@ class LineMessagingApi{ // eslint-disable-line no-unused-vars
       };
    }
 }
+
+module.exports = LineMessagingApi;

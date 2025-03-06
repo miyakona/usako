@@ -77,8 +77,8 @@ ${this.commandSampleDeleteAll}
       case '欲しい':
         splitted.pop(); // 末尾の `欲しい` を削除
         return this.add(splitted);
-       case '全消し':
-         return this.deleteAll();
+      case '全消し':
+        return this.deleteAll();
       default:
         return '「リスト」「買ったよ」「欲しい」のどれかで話しかけて…！！！';
     }
@@ -149,7 +149,8 @@ ${this.commandSampleList}
     for (var itemKey in items) {
       if (items[itemKey][1] != '済') {
         isNone = false;
-        this.sheet.getRange((Number(itemKey) + 2), 2).setValue('済');
+        const range = this.sheet.getRange(Number(itemKey) + 2, 2);
+        range.setValue('済');
       }
     }
 
@@ -158,7 +159,6 @@ ${this.commandSampleList}
     }
 
     return 'リストから品目を消しておいたよ〜';
-
   }
 
   /**
@@ -181,13 +181,13 @@ ${this.commandSampleList}
     }
     const items = this.sheet.getRange(2, 1, lastRow, 2).getValues();
 
-
     var isNone = true;
     for (var taegetKey in target) {
       for (var itemKey in items) {
         if (items[itemKey][1] != '済' && String(target[taegetKey]) == items[itemKey][0]) {
           isNone = false;
-          this.sheet.getRange((Number(itemKey) + 2), 2).setValue('済');
+          const range = this.sheet.getRange(Number(itemKey) + 2, 2);
+          range.setValue('済');
         }
       }
     }
@@ -237,3 +237,5 @@ ${this.commandSampleList}
     return this.sheet;
   }
 }
+
+module.exports = Purchase;
