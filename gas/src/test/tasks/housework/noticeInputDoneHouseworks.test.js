@@ -1,5 +1,5 @@
 const NoticeInputDoneHouseworks = require('../../../tasks/housework/noticeInputDoneHouseworks');
-const commandBase = require('../../../claasess/commandBase');
+const commandBase = require('../../../classes/commandBase');
 
 // LineMessagingApiをモック化
 global.LineMessagingApi = jest.fn().mockImplementation(() => ({

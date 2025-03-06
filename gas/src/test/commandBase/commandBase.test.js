@@ -1,4 +1,4 @@
-const CommandBase = require('../../claasess/commandBase');
+const CommandBase = require('../../classes/commandBase');
 
 // LineMessagingApiのモック
 class MockLineMessagingApi {

@@ -1,4 +1,4 @@
-const Housework = require('../../claasess/housework');
+const Housework = require('../../classes/housework');
 
 describe('Housework', () => {
   let housework;

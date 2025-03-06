@@ -1,4 +1,4 @@
-const AccountBook = require('../../claasess/accountBook');
+const AccountBook = require('../../classes/accountBook');
 
 // モックの設定
 jest.mock('google-apps-script', () => ({

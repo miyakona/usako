@@ -1,7 +1,7 @@
 const DeletePurchased = require('../../tasks/deletePurchased');
-const Purchase = require('../../claasess/purchase');
+const Purchase = require('../../classes/purchase');
 
-jest.mock('../../claasess/purchase');
+jest.mock('../../classes/purchase');
 
 describe('DeletePurchased', () => {
   let deletePurchased;

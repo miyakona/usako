@@ -1,9 +1,9 @@
 const AccountBookSummary = require('../../tasks/accountBook/accountBookSummary');
-const AccountBook = require('../../claasess/accountBook');
-const LineMessagingApi = require('../../claasess/lineMessagingApi');
+const AccountBook = require('../../classes/accountBook');
+const LineMessagingApi = require('../../classes/lineMessagingApi');
 
-jest.mock('../../claasess/accountBook');
-jest.mock('../../claasess/lineMessagingApi');
+jest.mock('../../classes/accountBook');
+jest.mock('../../classes/lineMessagingApi');
 
 describe('AccountBookSummary', () => {
   let accountBookSummary;
