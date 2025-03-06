@@ -1,4 +1,4 @@
-const LineMessagingApi = require('../../claasess/lineMessagingApi');
+const LineMessagingApi = require('../../classes/lineMessagingApi');
 
 describe('LineMessagingApi', () => {
   let lineMessagingApi;

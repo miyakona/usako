@@ -1,5 +1,5 @@
 const ArchiveHouseworks = require('../../../tasks/housework/archiveHouseworks');
-const commandBase = require('../../../claasess/commandBase');
+const commandBase = require('../../../classes/commandBase');
 
 // Houseworkをモック化
 global.Housework = jest.fn().mockImplementation(() => ({

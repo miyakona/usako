@@ -1,4 +1,4 @@
-const Purchase = require('../../claasess/purchase');
+const Purchase = require('../../classes/purchase');
 
 describe('Purchase', () => {
   let purchase;

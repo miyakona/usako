@@ -1,6 +1,6 @@
-const Chat = require('../../claasess/chat');
+const Chat = require('../../classes/chat');
 
-jest.mock('../../claasess/commandBase');
+jest.mock('../../classes/commandBase');
 
 describe('Chat', () => {
   let chat;
