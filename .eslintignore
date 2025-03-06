@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# Build output
+worker/dist/
+gas/dist/
+
+# GAS specific
+gas/gas_backup/
+
+# Coverage
+coverage/

@@ -28,3 +28,6 @@ gas/gas_backup/
 worker/.wrangler/
 worker/.cloudflare/
 worker/dist/
+
+# Environment variables
+.dev.vars
