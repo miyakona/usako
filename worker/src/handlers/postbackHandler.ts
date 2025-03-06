@@ -112,7 +112,8 @@ export class PostbackHandler {
   private async getAccountBookStatus(): Promise<string> {
     try {
       // 実際の実装では、Google Sheetsから家計簿の状況を取得する
-      return '報告済の支出はないみたい。';
+      const message = '報告済の支出はないみたい。';
+      return message;
     } catch (error) {
       console.error('Error getting account book status:', error);
       return 'エラーが発生しました。もう一度お試しください。';
@@ -125,7 +126,8 @@ export class PostbackHandler {
   private async getAccountBookSummary(): Promise<string> {
     try {
       // 実際の実装では、Google Sheetsから家計簿のサマリを取得する
-      return '現時点での支払内容はこんな感じだよ！\n\n食費: 10000円\n日用品: 5000円\n\n毎月と比較してどうかな？';
+      const message = '現時点での支払内容はこんな感じだよ！\n\n食費: 10000円\n日用品: 5000円\n\n毎月と比較してどうかな？';
+      return message;
     } catch (error) {
       console.error('Error getting account book summary:', error);
       return 'エラーが発生しました。もう一度お試しください。';
