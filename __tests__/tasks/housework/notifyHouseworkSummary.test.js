@@ -177,6 +177,7 @@ describe('NotifyHouseworkSummary', () => {
 
       const result = notifyHouseworkSummary.getSpendingMoney('ユーザー1', '掃除');
 
+      expect(global.Logger.log).toHaveBeenCalledWith('called NotifyHouseworkSummary: getSpendingMoney() who=ユーザー1, what=掃除');
       expect(result).toBe('100');
     });
   });
@@ -205,6 +206,7 @@ describe('NotifyHouseworkSummary', () => {
 
       const message = notifyHouseworkSummary.getFormattedMessage(user1, user2, summary, graph);
 
+      expect(global.Logger.log).toHaveBeenCalledWith('called NotifyHouseworkSummary:getFormattedMessage()');
       expect(message).toContain('今週の家事実績報告！');
       expect(message).toContain('ユーザー1に 1000円');
       expect(message).toContain('ユーザー2に 2000円');
