@@ -34,3 +34,5 @@ class Chat { // eslint-disable-line no-unused-vars
     return message[Math.floor(Math.random() * message.length)];
   }
 }
+
+module.exports = Chat;
