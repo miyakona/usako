@@ -1,14 +1,25 @@
 {
   "name": "usako",
   "version": "1.0.0",
-  "description": "",
-  "main": "main.js",
+  "description": "LINE Bot with Google Sheets integration",
+  "private": true,
+  "workspaces": [
+    "gas",
+    "worker"
+  ],
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "test": "npm run test:gas && npm run test:worker",
+    "test:gas": "cd gas && npm test",
+    "test:worker": "cd worker && npm test",
+    "test:coverage": "npm run test:coverage:gas && npm run test:coverage:worker",
+    "test:coverage:gas": "cd gas && npm run test:coverage",
+    "test:coverage:worker": "cd worker && npm run test:coverage",
+    "lint": "npm run lint:gas && npm run lint:worker",
+    "lint:gas": "cd gas && npm run lint",
+    "lint:worker": "cd worker && npm run lint",
+    "lint:fix": "npm run lint:fix:gas && npm run lint:fix:worker",
+    "lint:fix:gas": "cd gas && npm run lint:fix",
+    "lint:fix:worker": "cd worker && npm run lint:fix",
     "check": "npm run lint && npm test",
     "precommit": "npm run check",
     "prepare": "husky",
@@ -26,16 +37,6 @@
   },
   "homepage": "https://github.com/miyakona/usako#readme",
   "devDependencies": {
-    "@babel/core": "^7.26.9",
-    "@babel/preset-env": "^7.26.9",
-    "@babel/preset-typescript": "^7.26.0",
-    "@google/clasp": "^2.4.2",
-    "@types/jest": "^29.5.14",
-    "babel-jest": "^29.7.0",
-    "eslint": "^8.57.0",
-    "husky": "^9.1.7",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.2.6",
-    "typescript": "^5.8.2"
+    "husky": "^9.1.7"
   }
 }

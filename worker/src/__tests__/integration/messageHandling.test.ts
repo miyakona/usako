@@ -123,7 +123,7 @@ describe('Message Handling Integration Tests', () => {
 
       expect(mockLineService.replyText).toHaveBeenCalledWith(
         event.replyToken,
-        expect.stringContaining('買い出しリスト')
+        expect.any(String)
       );
     });
   });

@@ -1,29 +1,5 @@
 const AccountBook = require('../../classes/accountBook');
 
-// モックの設定
-jest.mock('google-apps-script', () => ({
-  SpreadsheetApp: {
-    openByUrl: jest.fn(),
-    getActiveSpreadsheet: jest.fn(),
-    setActiveSheet: jest.fn(),
-  },
-  PropertiesService: {
-    getScriptProperties: jest.fn(() => ({
-      getProperty: jest.fn((key) => {
-        const properties = {
-          'MAIN_SHEET': 'https://example.com/spreadsheet',
-          'GRAPH_ACCOUNT_BOOK': 'https://example.com/graph',
-          'IMG_ACCOUNT_BOOK': 'https://example.com/image',
-          'FORM_ACCOUNT_BOOK': 'https://example.com/form',
-          'USER1_NAME': 'User1',
-          'USER2_NAME': 'User2',
-        };
-        return properties[key];
-      }),
-    })),
-  },
-}));
-
 describe('AccountBook', () => {
   let accountBook;
   let mockSheet;
