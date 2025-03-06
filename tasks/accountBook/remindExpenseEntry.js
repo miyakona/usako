@@ -1,3 +1,5 @@
+const commandBase = require('../../claasess/commandBase');
+
 class RemindExpenseEntry extends commandBase { // eslint-disable-line no-unused-vars, no-undef
 
   constructor() {
@@ -25,3 +27,5 @@ function remindExpenseEntry () { // eslint-disable-line no-unused-vars
   const batch = new RemindExpenseEntry();
   batch.main();
 }
+
+module.exports = RemindExpenseEntry;

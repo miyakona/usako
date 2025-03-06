@@ -1,3 +1,5 @@
+const commandBase = require('../../claasess/commandBase');
+
 class RemindInputDoneHouseworks extends commandBase { // eslint-disable-line no-unused-vars, no-undef
 
   constructor() {
@@ -25,3 +27,5 @@ function remindInputDoneHouseworks () { // eslint-disable-line no-unused-vars
   const batch = new RemindInputDoneHouseworks();
   batch.main();
 }
+
+module.exports = RemindInputDoneHouseworks;

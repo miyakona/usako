@@ -1,3 +1,5 @@
+const commandBase = require('../claasess/commandBase');
+
 class NoticeTrashDay extends commandBase { // eslint-disable-line no-unused-vars, no-undef
 
   constructor() {
@@ -19,19 +21,29 @@ class NoticeTrashDay extends commandBase { // eslint-disable-line no-unused-vars
     var comment = [];
 
     // 翌日が第何週目かを求める
-    var isTheWhatWeekly = Math.floor((dt.getDate() - 1 ) / 7) + 1;
-    switch(dt.getDay())
-    {
+    const firstDayOfMonth = new Date(dt.getFullYear(), dt.getMonth(), 1);
+    const firstDayOfWeek = firstDayOfMonth.getDay();
+    const dayOfMonth = dt.getDate();
+    const isTheWhatWeekly = Math.floor((dayOfMonth + firstDayOfWeek - 1) / 7) + 1;
+    const day = dt.getDay();
+
+    // 土曜日と日曜日は通知しない
+    if (day === 0 || day === 6) {
+      return;
+    }
+
+    // 曜日に応じてゴミの種類を判定
+    switch(day) {
       // 月曜日のごみ
       case 1:
         comment.push('可燃ごみ');
         break;
       // 火曜日のごみ
       case 2:
-        if (isTheWhatWeekly == 2 || isTheWhatWeekly == 4) {
+        if (isTheWhatWeekly === 2 || isTheWhatWeekly === 4) {
           comment.push('不燃ごみ');
         }
-        if (isTheWhatWeekly == 1 || isTheWhatWeekly == 3) {
+        if (isTheWhatWeekly === 1 || isTheWhatWeekly === 3) {
           comment.push('資源再生物');
         }
         break;
@@ -42,9 +54,6 @@ class NoticeTrashDay extends commandBase { // eslint-disable-line no-unused-vars
       // 木曜日のごみ
       case 4:
         comment.push('可燃ごみ');
-        break;
-      // 土曜日のごみ
-      case 6:
         break;
     }
 
@@ -62,3 +71,5 @@ function noticeTrashday () { // eslint-disable-line no-unused-vars
   const batch = new NoticeTrashDay();
   batch.main();
 }
+
+module.exports = NoticeTrashDay;
