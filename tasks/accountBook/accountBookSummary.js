@@ -1,3 +1,7 @@
+const AccountBook = require('../../claasess/accountBook');
+const LineMessagingApi = require('../../claasess/lineMessagingApi');
+const commandBase = require('../../claasess/commandBase');
+
 class AccountBookSummary extends commandBase { // eslint-disable-line no-unused-vars, no-undef
 
   constructor() {
@@ -14,8 +18,8 @@ class AccountBookSummary extends commandBase { // eslint-disable-line no-unused-
    */
   run() {
     Logger.log('called ' + this.constructor.name + ':run()');
-    const accountBook = new AccountBook(); // eslint-disable-line no-undef
-    const line = new LineMessagingApi(); // eslint-disable-line no-undef
+    const accountBook = new AccountBook();
+    const line = new LineMessagingApi();
     const dt = new Date();
     const currentData = this.aggregate(dt, accountBook.getVariableCost(), accountBook.getFixedCost());
     const summarySheet = accountBook.getSummarySheet();
@@ -128,13 +132,13 @@ ${accountBook.getSummary()}`);
 
     const diffLastMonth = {};
     const diffLastYear  = {};
-    for (const key in current) {
-      if (key == 0) {
+    for (let i = 0; i < current.length; i++) {
+      if (indexes[i][0] === '日付') {
         // 日付の比較はしない
         continue;
       }
-      diffLastMonth[indexes[key]] = current[key] - lastMonth[key];
-      diffLastYear[indexes[key]]  = current[key] - lastYear[key];
+      diffLastMonth[indexes[i][0]] = current[i][0] - lastMonth[i][0];
+      diffLastYear[indexes[i][0]]  = current[i][0] - lastYear[i][0];
     }
 
     return {
