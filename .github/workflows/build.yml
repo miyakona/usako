@@ -35,7 +35,8 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarqube-scan-action@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # Generate this on SonarCloud.io 
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # Generate this on SonarCloud.io
+          SONAR_HOST_URL: https://sonarcloud.io 
