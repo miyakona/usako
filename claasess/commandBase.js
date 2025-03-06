@@ -42,3 +42,5 @@ ${stack}`;
    */
   run() {}
 }
+
+module.exports = commandBase;
