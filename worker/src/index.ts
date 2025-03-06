@@ -3,7 +3,7 @@ import { MessageHandler } from './handlers/messageHandler';
 import { PostbackHandler } from './handlers/postbackHandler';
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
     // CORSヘッダーを設定
     if (request.method === 'OPTIONS') {
       return new Response(null, {
@@ -100,7 +100,7 @@ async function handleEvent(
         break;
         
       case 'postback':
-        if (event.postback?.data) {
+        if (event.postback?.data && source?.userId) {
           await postbackHandler.handlePostback(replyToken, event.postback.data, source.userId);
         }
         break;

@@ -1,12 +1,12 @@
-import { LineEvent, Env } from '../types';
+import { Env } from '../types';
 import { LineMessagingService } from '../services/lineMessaging';
 import { GoogleSheetsService } from '../services/googleSheets';
 import { PurchaseHandler } from './purchaseHandler';
 
 export class MessageHandler {
-  private lineService: LineMessagingService;
-  private sheetsService: GoogleSheetsService;
-  private purchaseHandler: PurchaseHandler;
+  private readonly lineService: LineMessagingService;
+  private readonly sheetsService: GoogleSheetsService;
+  private readonly purchaseHandler: PurchaseHandler;
 
   constructor(env: Env) {
     this.lineService = new LineMessagingService(env);
@@ -17,7 +17,7 @@ export class MessageHandler {
   /**
    * メッセージを処理する
    */
-  async handleMessage(replyToken: string, text: string, userId?: string): Promise<void> {
+  async handleMessage(replyToken: string, text: string, _userId?: string): Promise<void> {
     console.log('Handling message:', text);
 
     // コマンド系

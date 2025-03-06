@@ -1,7 +1,5 @@
 import { MessageHandler } from '../../handlers/messageHandler';
 import { PostbackHandler } from '../../handlers/postbackHandler';
-import { LineMessagingService } from '../../services/lineMessaging';
-import { GoogleSheetsService } from '../../services/googleSheets';
 import { Env } from '../../types';
 
 const mockLineService = {

@@ -1,6 +1,5 @@
 import { MessageHandler } from '../../handlers/messageHandler';
 import { LineMessagingService } from '../../services/lineMessaging';
-import { GoogleSheetsService } from '../../services/googleSheets';
 
 jest.mock('../../services/lineMessaging');
 jest.mock('../../services/googleSheets');

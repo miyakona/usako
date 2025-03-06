@@ -3,8 +3,8 @@ import { LineMessagingService } from '../services/lineMessaging';
 import { GoogleSheetsService } from '../services/googleSheets';
 
 export class PostbackHandler {
-  private lineService: LineMessagingService;
-  private sheetsService: GoogleSheetsService;
+  private readonly lineService: LineMessagingService;
+  private readonly sheetsService: GoogleSheetsService;
 
   constructor(env: Env) {
     this.lineService = new LineMessagingService(env);
@@ -95,7 +95,7 @@ export class PostbackHandler {
   /**
    * 家事の状況を取得する
    */
-  private async getHouseworkStatus(userId: string): Promise<string> {
+  private async getHouseworkStatus(_userId: string): Promise<string> {
     try {
       // 実際の実装では、Google Sheetsから家事の状況を取得する
       const message = '今日はまだ家事をやってないみたい。\n報告するときは、「フォーム」って話しかけてね！';
