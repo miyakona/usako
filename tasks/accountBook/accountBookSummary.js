@@ -45,7 +45,7 @@ ${accountBook.getSummary()}`);
   aggregate(dt, variableCost, fixedCost) {
     Logger.log('called ' + this.constructor.name + ':aggregate()');
     // フォームの選択肢に依存
-    var aggregateResult = {
+    const aggregateResult = {
       '食費' : 0,
       '雑費' : 0,
       'その他' : 0,
@@ -59,13 +59,13 @@ ${accountBook.getSummary()}`);
       '日付' : Number(dt.getFullYear()) + '/' + String(("0"+(dt.getMonth() + 1)).slice(-2))
     };
 
-    for(var vKey in variableCost) {
+    for(const vKey in variableCost) {
       if (Number(variableCost[vKey][1]) <= Number(dt.getFullYear()) && Number(variableCost[vKey][2]) <= Number(dt.getMonth() + 1)) {
         aggregateResult[variableCost[vKey][3]] += variableCost[vKey][4];
       }
     }
 
-    for(var fKey in fixedCost) {
+    for(const fKey in fixedCost) {
         aggregateResult[fixedCost[fKey][0]] = fixedCost[fKey][1];
     }
 
@@ -90,19 +90,19 @@ ${accountBook.getSummary()}`);
     const map = inverseObject(indexes, true);
 
     // サマリシートに当月分追記
-    var column = summarySheet.getLastColumn();
+    let column = summarySheet.getLastColumn();
     column = Number(column);
-    for (let key in currentData) {
+    for (const key in currentData) {
       summarySheet.getRange(Number(map[key]) + 1, column).setValue(currentData[key]);
     }
 
     // 来月分追記
-    let lastColumn = Number(summarySheet.getLastColumn()) + 1;
-    for (let key in currentData) {
+    const lastColumn = Number(summarySheet.getLastColumn()) + 1;
+    for (const key in currentData) {
       if (key == '日付') {
-        let dt = new Date();
-        let nextMonth = new Date(dt.getFullYear(), dt.getMonth() + 1, 1);
-        let date = `${nextMonth.getFullYear()}/${String(("0"+(nextMonth.getMonth() + 1)).slice(-2))}`
+        const dt = new Date();
+        const nextMonth = new Date(dt.getFullYear(), dt.getMonth() + 1, 1);
+        const date = `${nextMonth.getFullYear()}/${String(("0"+(nextMonth.getMonth() + 1)).slice(-2))}`
         summarySheet.getRange(Number(map[key]) + 1, lastColumn).setValue(date);
       } else {
         summarySheet.getRange(Number(map[key]) + 1, lastColumn).setValue(`=SUMIF('家計簿_今月'!$D:$D,"${key}",'家計簿_今月'!$E:$E) `);
@@ -126,9 +126,9 @@ ${accountBook.getSummary()}`);
     const lastMonth = sheet.getRange(1, sheet.getLastColumn() - 1, sheet.getLastRow(), 1).getValues();
     const lastYear  = sheet.getRange(1, sheet.getLastColumn() - 12, sheet.getLastRow(), 1).getValues();
 
-    var diffLastMonth = {};
-    var diffLastYear  = {};
-    for (var key in current) {
+    const diffLastMonth = {};
+    const diffLastYear  = {};
+    for (const key in current) {
       if (key == 0) {
         // 日付の比較はしない
         continue;
@@ -157,8 +157,8 @@ ${accountBook.getSummary()}`);
 
     // 合計値を求める関数を定義
     const sum = function(arr){
-      var res = 0;
-      for (var value in arr) {
+      let res = 0;
+      for (const value in arr) {
         res += arr[value];
       }
       return res;

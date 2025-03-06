@@ -119,11 +119,11 @@ ${remindComment}`;
       return '報告済の支出はないみたい。';
     }
 
-    var text ='';
+    let text ='';
 
     // 変動費の詳細
     const dt = new Date();
-    for(var key in variableCost){
+    for(const key in variableCost){
       // 実施日より過去分であれば対象にする
       if (Number(variableCost[key][1]) <= Number(dt.getFullYear()) && Number(variableCost[key][2]) <= Number(dt.getMonth() + 1))
       {
@@ -147,13 +147,13 @@ ${remindComment}`;
     const payment = this.getPayment(variableCost, fixedCost);
     const detail = this.getDetail(variableCost, fixedCost);
 
-    var text = `${this.user1}さん支払い分 : ${payment['user1']}円
+    let text = `${this.user1}さん支払い分 : ${payment['user1']}円
 ${this.user2}さん支払い分 : ${payment['user2']}円
 
 支払いの内訳は以下だよ。
 (凡例) [分類] : [価格] （出した人）
 `;
-    for(var key in detail)
+    for(const key in detail)
     {
       text += detail[key][0] + ' : ' + detail[key][1] + '円 （' + detail[key][2] + '）\n';
     }
@@ -169,11 +169,11 @@ ${this.user2}さん支払い分 : ${payment['user2']}円
    */
   getPayment(variableCost, fixedCost) {
     Logger.log('called ' + this.constructor.name + ':getPayment()');
-    var paymentUser1 = 0;
-    var paymentUser2 = 0;
+    let paymentUser1 = 0;
+    let paymentUser2 = 0;
 
     const dt = new Date();
-    for(var vKey in variableCost){
+    for(const vKey in variableCost){
       // 実施日より過去分であれば加算する
       if (Number(variableCost[vKey][1]) <= Number(dt.getFullYear()) && Number(variableCost[vKey][2]) <= Number(dt.getMonth() + 1))
       {
@@ -188,7 +188,7 @@ ${this.user2}さん支払い分 : ${payment['user2']}円
     }
 
     // 固定費から家計を計算
-    for (var fKey in fixedCost){
+    for (const fKey in fixedCost){
       if (fixedCost[fKey][2] == this.user1) {
         paymentUser1 += fixedCost[fKey][1];
       } else {
@@ -205,11 +205,11 @@ ${this.user2}さん支払い分 : ${payment['user2']}円
 
   getDetail(variableCost, fixedCost) {
     Logger.log('called ' + this.constructor.name + ':getDetail()');
-    var detail = [];
+    let detail = [];
 
     // 変動費の詳細
     const dt = new Date();
-    for(var key in variableCost){
+    for(const key in variableCost){
       // 実施日より過去分であれば対象にする
       if (Number(variableCost[key][1]) <= Number(dt.getFullYear()) && Number(variableCost[key][2]) <= Number(dt.getMonth() + 1))
       {

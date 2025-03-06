@@ -102,16 +102,16 @@ ${this.formUrl}?usp=pp_url&entry.1025033203=${date}`;
     }
     const achievement = this.sheet.getRange(2, 2, lastRow, 5).getValues();
 
-    var text = '報告済の家事はこれだよ！\n';
-    var isDone = false;
-    for (var key in achievement){
+    let text = '報告済の家事はこれだよ！\n';
+    let isDone = false;
+    for (const key in achievement){
       if (achievement[key][4] == '済') {
         continue;
       }
       // 報告済 && 未支払いの家事をリストに追記する
       if (String(achievement[key][0]) == String(userName)) {
         isDone = true;
-        let targetDate = new Date(String(achievement[key][2]));
+        const targetDate = new Date(String(achievement[key][2]));
         text = text + (targetDate.getMonth() + 1) + '/' + targetDate.getDate() + ' ' + String(achievement[key][1]) + '\n';
       }
     }

@@ -45,7 +45,7 @@ yyy
    */
   getMessage(message) {
     Logger.log('called ' + this.constructor.name + ':getMessage()');
-    var splitted = message.split(/\r\n|\n/);
+    const splitted = message.split(/\r\n|\n/);
 
     if (splitted.length < 2) {
       return `フォーマットエラーだよ！
@@ -104,11 +104,11 @@ ${this.commandSampleAdd}
     }
     const items = this.sheet.getRange(2, 1, lastRow, 2).getValues();
 
-    var text = `買い出しリストには、いま以下の品目が登録されてるよ！
+    let text = `買い出しリストには、いま以下の品目が登録されてるよ！
 
 `;
-    var isNone = true;
-    for(var key in items) {
+    let isNone = true;
+    for(const key in items) {
       if (items[key][1] != '済') {
         isNone = false;
         text += String(items[key][0]) + '\n';
@@ -145,8 +145,8 @@ ${this.commandSampleList}
 
     const items = this.sheet.getRange(2, 1, lastRow, 2).getValues();
 
-    var isNone = true;
-    for (var itemKey in items) {
+    let isNone = true;
+    for (const itemKey in items) {
       if (items[itemKey][1] != '済') {
         isNone = false;
         const range = this.sheet.getRange(Number(itemKey) + 2, 2);
@@ -181,9 +181,9 @@ ${this.commandSampleList}
     }
     const items = this.sheet.getRange(2, 1, lastRow, 2).getValues();
 
-    var isNone = true;
-    for (var taegetKey in target) {
-      for (var itemKey in items) {
+    let isNone = true;
+    for (const taegetKey in target) {
+      for (const itemKey in items) {
         if (items[itemKey][1] != '済' && String(target[taegetKey]) == items[itemKey][0]) {
           isNone = false;
           const range = this.sheet.getRange(Number(itemKey) + 2, 2);
@@ -215,8 +215,8 @@ ${this.commandSampleAdd}
 で追加してね！`;
     }
 
-    for (var key in target) {
-      let lastRow = this.sheet.getLastRow() + 1;
+    for (const key in target) {
+      const lastRow = this.sheet.getLastRow() + 1;
       this.sheet.setActiveCell('A' + lastRow).setValue(target[key]);
     }
 

@@ -17,7 +17,13 @@ global.LineMessagingApi = jest.fn().mockImplementation(() => ({
 // SpreadsheetAppをモック化
 global.SpreadsheetApp = {
   openByUrl: jest.fn().mockReturnValue({
-    getSheetByName: jest.fn(),
+    getSheetByName: jest.fn().mockReturnValue({
+      getRange: jest.fn().mockReturnValue({
+        getValues: jest.fn().mockReturnValue([['ユーザー1,ユーザー2']]),
+        getValue: jest.fn().mockReturnValue(1000),
+      }),
+      getLastRow: jest.fn().mockReturnValue(5),
+    }),
   }),
 };
 

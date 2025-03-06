@@ -26,8 +26,8 @@ class DeletePurchased extends commandBase { // eslint-disable-line no-unused-var
     }
 
     const items = sheet.getRange(2, 1, lastRow, 2).getValues();
-    var deleteRows = [];
-    for (var key in items) {
+    const deleteRows = [];
+    for (const key in items) {
       if (items[key][1] == '済') {
         /**
          * keyはヘッダ行を除く2行目を添字0としている。
@@ -39,7 +39,7 @@ class DeletePurchased extends commandBase { // eslint-disable-line no-unused-var
     }
 
     // 別の行を消さないようにするため、検索とは逆順で行を削除
-    for (var i = deleteRows.length - 1; i > -1; i--) {
+    for (let i = deleteRows.length - 1; i > -1; i--) {
       sheet.deleteRow(deleteRows[i]);
     }
   }

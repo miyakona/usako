@@ -25,7 +25,7 @@ class commandBase { // eslint-disable-line no-unused-vars
    */
   notice(errorMessage, stack) {
     const line = new LineMessagingApi(); // eslint-disable-line no-undef
-    let message = `${this.name} の実行に失敗しました。
+    const message = `${this.name} の実行に失敗しました。
 
 error message: ${errorMessage}
 

@@ -18,7 +18,7 @@ class NoticeTrashDay extends commandBase { // eslint-disable-line no-unused-vars
     Logger.log('called ' + this.constructor.name + ':run()');
     const dt = new Date();
     dt.setDate(dt.getDate() + 1);
-    var comment = [];
+    const comment = [];
 
     // 翌日が第何週目かを求める
     const firstDayOfMonth = new Date(dt.getFullYear(), dt.getMonth(), 1);

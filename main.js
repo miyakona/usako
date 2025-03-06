@@ -21,7 +21,7 @@ function doPost(e) { // eslint-disable-line no-unused-vars
       }
     });
   } catch (e) {
-    let message = `error message: ${e.message}
+    const message = `error message: ${e.message}
 
 stack trace:
 ${e.stack}`;
@@ -40,7 +40,7 @@ ${e.stack}`;
  */
 function handlePostback_(replyToken, data, user_id) {
   data = JSON.parse(data);
-  var text = '';
+  let text = '';
   const accountBook = new AccountBook(); // eslint-disable-line no-undef
   const housework = new Housework(); // eslint-disable-line no-undef
   switch(data.type)
@@ -74,7 +74,7 @@ function handleMessage_(messageText, replyToken) {
   const accountBook = new AccountBook(); // eslint-disable-line no-undef
 
   // コマンド系
-  var action = [];
+  let action = [];
   switch(messageText)
   {
     case '家事管理' :

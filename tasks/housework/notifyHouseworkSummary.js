@@ -17,14 +17,15 @@ class NotifyHouseworkSummary extends commandBase { // eslint-disable-line no-unu
 
     const housework = new Housework(); // eslint-disable-line no-undef
     const sheet = housework.getSheet();
-    const user1 = housework.getUser1Name();
-    const user2 = housework.getUser2Name();
 
     // 通知未送信分がなければ何もしない
-    const unnotified = this.getUnnotified(user1, sheet.getRange(2, 2, sheet.getLastRow() - 1, 5).getValues());
+    const unnotified = this.getUnnotified('ユーザー1', sheet.getRange(2, 2, sheet.getLastRow() - 1, 5).getValues());
     if (unnotified['user1'].length < 1 && unnotified['user2'].length < 1) {
       return;
     }
+
+    const user1 = housework.getUser1Name();
+    const user2 = housework.getUser2Name();
 
     const summary = {
       'user1' : this.getSummary(user1, unnotified['user1']),
@@ -37,7 +38,7 @@ class NotifyHouseworkSummary extends commandBase { // eslint-disable-line no-unu
     line.pushAll(this.getFormattedMessage(user1, user2, summary, graph));
 
     // メール送信した項目に「済」を記載
-    for(var i = 2; i <= sheet.getLastRow(); i++){
+    for(let i = 2; i <= sheet.getLastRow(); i++){
       sheet.getRange(i, 6).setValue('済');
     }
   }
@@ -51,12 +52,12 @@ class NotifyHouseworkSummary extends commandBase { // eslint-disable-line no-unu
    */
   getUnnotified(user1, reported) {
     Logger.log('called ' + this.constructor.name + ':getUnnotified()');
-    var unnotified = {
+    const unnotified = {
       'user1' : [],
       'user2' : [],
     };
 
-    for (var key in reported){
+    for (const key in reported){
       if (reported[key][4] == '済') {
         continue;
       }
@@ -80,9 +81,9 @@ class NotifyHouseworkSummary extends commandBase { // eslint-disable-line no-unu
    */
   getSummary(user, context) {
     Logger.log('called ' + this.constructor.name + ':getSummary()');
-    var sum = 0;
-    var did = [];
-    for(var key in context){
+    let sum = 0;
+    const did = [];
+    for(const key in context){
       // 家事の回数を計算
       did.push(context[key]);
 
@@ -121,10 +122,10 @@ class NotifyHouseworkSummary extends commandBase { // eslint-disable-line no-unu
     const referringColumn = header[0] == who ? 2 : 3;
 
     // 参照行の設定
-    var refferingRow = 0;
+    let refferingRow = 0;
     const houseworks = referringSheet.getRange(2, 1, referringSheet.getLastRow() - 1).getValues();
-    var index = 2;
-    for(var key in houseworks){
+    let index = 2;
+    for(const key in houseworks){
       if (houseworks[key] == what) {
         refferingRow = index;
         break;
@@ -146,7 +147,7 @@ class NotifyHouseworkSummary extends commandBase { // eslint-disable-line no-unu
   getFormattedMessage(user1, user2, summary, graph) {
     Logger.log('called ' + this.constructor.name + ':getFormattedMessage()');
     const dt = new Date();
-    let weeklyBeginning = new Date(dt);
+    const weeklyBeginning = new Date(dt);
     weeklyBeginning.setDate(dt.getDate() - 8);
 
     const formatDate = (date) => {
@@ -155,7 +156,7 @@ class NotifyHouseworkSummary extends commandBase { // eslint-disable-line no-unu
 
     const term = `${formatDate(weeklyBeginning)} 〜 ${formatDate(new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - 1))}`;
 
-    var message = `今週の家事実績報告！
+    let message = `今週の家事実績報告！
 ${term}
 
 今週も家事おつかれさまでした。
