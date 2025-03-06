@@ -15,7 +15,9 @@ describe('Purchase', () => {
     mockSheet = {
       getRange: jest.fn().mockReturnValue(mockRange),
       getLastRow: jest.fn().mockReturnValue(3),
-      setActiveCell: jest.fn().mockReturnThis(),
+      setActiveCell: jest.fn().mockReturnValue({
+        setValue: jest.fn(),
+      }),
       setValue: jest.fn(),
     };
 
@@ -249,24 +251,53 @@ yyy
   });
 
   describe('add', () => {
-    it('品目が指定されていない場合、エラーメッセージを返すこと', () => {
+    const expectedSuccessMessage = `買い出しリストに追加しておいたよ！
+リストの内容を見るには
+
+買い出し
+リスト
+
+で教えてね`;
+
+    it('新しい品目を追加できること', () => {
+      mockSheet.getLastRow
+        .mockReturnValueOnce(3)  // 1回目の呼び出し
+        .mockReturnValueOnce(4); // 2回目の呼び出し
+
+      const result = purchase.add(['新品目1', '新品目2']);
+
+      expect(result).toBe(expectedSuccessMessage);
+      expect(mockSheet.setActiveCell).toHaveBeenNthCalledWith(1, 'A4');
+      expect(mockSheet.setActiveCell).toHaveBeenNthCalledWith(2, 'A5');
+      expect(mockSheet.setActiveCell('A4').setValue).toHaveBeenCalledWith('新品目1');
+      expect(mockSheet.setActiveCell('A5').setValue).toHaveBeenCalledWith('新品目2');
+    });
+
+    it('既存の未完了品目がある場合も追加できること', () => {
+      mockSheet.getLastRow.mockReturnValue(3);
+
+      const result = purchase.add(['新品目1']);
+
+      expect(result).toBe(expectedSuccessMessage);
+      expect(mockSheet.setActiveCell).toHaveBeenCalledWith('A4');
+      expect(mockSheet.setActiveCell('A4').setValue).toHaveBeenCalledWith('新品目1');
+    });
+
+    it('空のリストの場合も追加できること', () => {
+      mockSheet.getLastRow.mockReturnValue(1);
+
+      const result = purchase.add(['新品目1']);
+
+      expect(result).toBe(expectedSuccessMessage);
+      expect(mockSheet.setActiveCell).toHaveBeenCalledWith('A2');
+      expect(mockSheet.setActiveCell('A2').setValue).toHaveBeenCalledWith('新品目1');
+    });
+
+    it('空の配列が渡された場合、エラーメッセージを返すこと', () => {
       const result = purchase.add([]);
 
       expect(result).toContain('品目が指定されていないみたいだよ。');
       expect(result).toContain(purchase.commandSampleAdd);
-    });
-
-    it('品目を追加して完了メッセージを返すこと', () => {
-      const items = ['品物1', '品物2'];
-      const result = purchase.add(items);
-
-      expect(result).toContain('買い出しリストに追加しておいたよ！');
-      expect(result).toContain(purchase.commandSampleList);
-      expect(mockSheet.setActiveCell).toHaveBeenCalledTimes(2);
-      expect(mockSheet.setValue).toHaveBeenCalledTimes(2);
-      items.forEach(item => {
-        expect(mockSheet.setValue).toHaveBeenCalledWith(item);
-      });
     });
   });
 
@@ -275,4 +306,4 @@ yyy
       expect(purchase.getSheet()).toBe(mockSheet);
     });
   });
-}); 
+});
