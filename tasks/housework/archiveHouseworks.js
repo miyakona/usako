@@ -15,6 +15,7 @@ class ArchiveHouseworks extends commandBase { // eslint-disable-line no-unused-v
    * 毎週日曜日 AM2〜3時
    */
   run() {
+    Logger.log('called ' + this.constructor.name + ':run()');
     const today = new Date();
     const dayOfWeek = today.getDay();
     const dayOfMonth = today.getDate();
