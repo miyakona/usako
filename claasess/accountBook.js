@@ -119,14 +119,13 @@ ${remindComment}`;
       return '報告済の支出はないみたい。';
     }
 
-    let text ='';
+    let text = '';
 
     // 変動費の詳細
     const dt = new Date();
-    for(const key in variableCost){
+    for (const key in variableCost) {
       // 実施日より過去分であれば対象にする
-      if (Number(variableCost[key][1]) <= Number(dt.getFullYear()) && Number(variableCost[key][2]) <= Number(dt.getMonth() + 1))
-      {
+      if (Number(variableCost[key][1]) <= Number(dt.getFullYear()) && Number(variableCost[key][2]) <= Number(dt.getMonth() + 1)) {
         text += `${variableCost[key][3]}: ${variableCost[key][4]}円（${variableCost[key][0]}）
 `;
       }
@@ -153,9 +152,8 @@ ${this.user2}さん支払い分 : ${payment['user2']}円
 支払いの内訳は以下だよ。
 (凡例) [分類] : [価格] （出した人）
 `;
-    for(const key in detail)
-    {
-      text += detail[key][0] + ' : ' + detail[key][1] + '円 （' + detail[key][2] + '）\n';
+    for (const key in detail) {
+      text += `${detail[key][0]} : ${detail[key][1]}円 （${detail[key][2]}）\n`;
     }
     return text;
   }
@@ -173,33 +171,30 @@ ${this.user2}さん支払い分 : ${payment['user2']}円
     let paymentUser2 = 0;
 
     const dt = new Date();
-    for(const vKey in variableCost){
+    for (const vKey in variableCost) {
       // 実施日より過去分であれば加算する
-      if (Number(variableCost[vKey][1]) <= Number(dt.getFullYear()) && Number(variableCost[vKey][2]) <= Number(dt.getMonth() + 1))
-      {
-        if (variableCost[vKey][0] == this.user1){
-          paymentUser1 += variableCost[vKey][4];
-        }
-        else if (variableCost[vKey][0] == this.user2)
-        {
-          paymentUser2 += variableCost[vKey][4];
+      if (Number(variableCost[vKey][1]) <= Number(dt.getFullYear()) && Number(variableCost[vKey][2]) <= Number(dt.getMonth() + 1)) {
+        if (variableCost[vKey][0] === this.user1) {
+          paymentUser1 += Number(variableCost[vKey][4]);
+        } else if (variableCost[vKey][0] === this.user2) {
+          paymentUser2 += Number(variableCost[vKey][4]);
         }
       }
     }
 
     // 固定費から家計を計算
-    for (const fKey in fixedCost){
-      if (fixedCost[fKey][2] == this.user1) {
-        paymentUser1 += fixedCost[fKey][1];
-      } else {
-        paymentUser2 += fixedCost[fKey][1];
+    for (const fKey in fixedCost) {
+      if (fixedCost[fKey][2] === this.user1) {
+        paymentUser1 += Number(fixedCost[fKey][1]);
+      } else if (fixedCost[fKey][2] === this.user2) {
+        paymentUser2 += Number(fixedCost[fKey][1]);
       }
     }
 
     // それぞれの支払った半額を払い合うため、キーと計算に使うユーザーは入れ替える
     return {
-      'user1' : paymentUser2 / 2,
-      'user2'  : paymentUser1 / 2,
+      'user1': paymentUser2 / 2,
+      'user2': paymentUser1 / 2,
     };
   }
 
@@ -209,19 +204,15 @@ ${this.user2}さん支払い分 : ${payment['user2']}円
 
     // 変動費の詳細
     const dt = new Date();
-    for(const key in variableCost){
+    for (const key in variableCost) {
       // 実施日より過去分であれば対象にする
-      if (Number(variableCost[key][1]) <= Number(dt.getFullYear()) && Number(variableCost[key][2]) <= Number(dt.getMonth() + 1))
-      {
-        if (variableCost[key][0] == this.user2 || variableCost[key][0] == this.user1)
-        {
-          detail.push(
-            [
-              variableCost[key][3], // 用途
-              variableCost[key][4], // 額面
-              variableCost[key][0]  // 払った人
-            ]
-          );
+      if (Number(variableCost[key][1]) <= Number(dt.getFullYear()) && Number(variableCost[key][2]) <= Number(dt.getMonth() + 1)) {
+        if (variableCost[key][0] === this.user2 || variableCost[key][0] === this.user1) {
+          detail.push([
+            variableCost[key][3], // 用途
+            variableCost[key][4], // 額面
+            variableCost[key][0]  // 払った人
+          ]);
         }
       }
     }
