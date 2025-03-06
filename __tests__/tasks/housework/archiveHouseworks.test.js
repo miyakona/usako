@@ -88,6 +88,7 @@ describe('ArchiveHouseworks', () => {
 
       archiveHouseworks.run();
 
+      expect(global.Logger.log).toHaveBeenCalledWith('called ArchiveHouseworks:run()');
       expect(mockHousework.getSheet).toHaveBeenCalled();
       expect(global.SpreadsheetApp.setActiveSheet).toHaveBeenCalledWith(mockSheet);
       expect(global.SpreadsheetApp.getActiveSpreadsheet().duplicateActiveSheet().setName).toHaveBeenCalledWith('家事代_202502');
@@ -102,6 +103,7 @@ describe('ArchiveHouseworks', () => {
 
       archiveHouseworks.run();
 
+      expect(global.Logger.log).toHaveBeenCalledWith('called ArchiveHouseworks:run()');
       expect(mockHousework.getSheet).not.toHaveBeenCalled();
       expect(global.SpreadsheetApp.setActiveSheet).not.toHaveBeenCalled();
       expect(global.SpreadsheetApp.getActiveSpreadsheet().duplicateActiveSheet().setName).not.toHaveBeenCalled();
