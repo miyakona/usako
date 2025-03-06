@@ -1,3 +1,5 @@
+const commandBase = require('../../claasess/commandBase');
+
 class ArchiveHouseworks extends commandBase { // eslint-disable-line no-unused-vars, no-undef
 
   constructor() {
@@ -13,28 +15,34 @@ class ArchiveHouseworks extends commandBase { // eslint-disable-line no-unused-v
    * 毎週日曜日 AM2〜3時
    */
   run() {
-    Logger.log('called ' + this.constructor.name + ':run()');
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const dayOfMonth = today.getDate();
 
-    const dt = new Date();
-    // その月の第一日曜日でないならアーカイブを実行しない
-    if ((Math.floor((dt.getDate() - 1 ) / 7) + 1) != 1) {
+    // 第一日曜日かどうかをチェック
+    const isFirstSunday = dayOfWeek === 0 && dayOfMonth <= 7;
+
+    if (!isFirstSunday) {
       return;
     }
-    const housework = new Housework(); // eslint-disable-line no-undef
+
+    const housework = new global.Housework();
     const currentSheet = housework.getSheet();
-    SpreadsheetApp.setActiveSheet(currentSheet);
+    global.SpreadsheetApp.setActiveSheet(currentSheet);
 
     // 年月(YYYYMM)の名前でシートをアーカイブ
-    const thisMonth = dt.getMonth() == 0 ? 12 : dt.getMonth();
-    const thisYear  = dt.getMonth() == 0 ? dt.getFullYear() - 1 : dt.getFullYear();
+    const thisMonth = today.getMonth() + 1;
+    const thisYear = today.getFullYear();
     const prefix = '家事代_';
-    SpreadsheetApp.getActiveSpreadsheet().duplicateActiveSheet().setName(`${prefix}${String(thisYear)}${String(("0"+(thisMonth)).slice(-2))}`);
+    global.SpreadsheetApp.getActiveSpreadsheet().duplicateActiveSheet().setName(`${prefix}${String(thisYear)}${String(("0"+thisMonth).slice(-2))}`);
 
     // 前々月分を削除する
-    const lastMonth = new Date(dt.getFullYear(), dt.getMonth()-2, dt.getDate());
+    const lastMonth = new Date(today.getFullYear(), today.getMonth()-2, 1);
     const targetDate = `${prefix}${String(lastMonth.getFullYear())}${String(("0"+(lastMonth.getMonth()+1)).slice(-2))}`;
-    const deleteTargetSheet = SpreadsheetApp.openByUrl(PropertiesService.getScriptProperties().getProperty('MAIN_SHEET')).getSheetByName(targetDate);
-    SpreadsheetApp.getActive().deleteSheet(deleteTargetSheet);
+    const deleteTargetSheet = global.SpreadsheetApp.openByUrl(global.PropertiesService.getScriptProperties().getProperty('MAIN_SHEET')).getSheetByName(targetDate);
+    if (deleteTargetSheet) {
+      global.SpreadsheetApp.getActive().deleteSheet(deleteTargetSheet);
+    }
 
     // シートをクリア
     currentSheet.deleteRows(2, currentSheet.getLastRow() - 1);
@@ -45,3 +53,5 @@ function archiveHouseworks () { // eslint-disable-line no-unused-vars
   const batch = new ArchiveHouseworks();
   batch.main();
 }
+
+module.exports = ArchiveHouseworks;
