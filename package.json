@@ -11,7 +11,8 @@
     "lint:fix": "eslint . --fix",
     "check": "npm run lint && npm test",
     "precommit": "npm run check",
-    "prepare": "husky"
+    "prepare": "husky",
+    "apply-cursor-settings": "./scripts/apply-cursor-settings.sh"
   },
   "repository": {
     "type": "git",
