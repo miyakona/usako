@@ -6,7 +6,10 @@
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
-    "prepush": "npm test"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "check": "npm run lint && npm test",
+    "prepush": "npm run check"
   },
   "repository": {
     "type": "git",
@@ -22,6 +25,7 @@
   "devDependencies": {
     "@google/clasp": "^2.4.2",
     "@types/jest": "^29.5.14",
+    "eslint": "^8.57.0",
     "husky": "^9.1.7",
     "jest": "^29.7.0"
   }
