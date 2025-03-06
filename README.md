@@ -35,6 +35,9 @@ npm test
 
 # カバレッジレポートの生成
 npm run test:coverage
+
+# Cursor AI設定の適用
+npm run apply-cursor-settings
 ```
 
 ### テスト
