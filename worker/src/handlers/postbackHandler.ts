@@ -49,10 +49,10 @@ export class PostbackHandler {
     switch(action) {
       case 'report':
         return '家事の報告だね！\nhttps://example.com/housework-form'; // 実際のフォームURLに置き換える
-        
+      
       case 'check':
         return await this.getHouseworkStatus(userId);
-        
+      
       default:
         return 'エラー。意図しないアクションが指定されました。';
     }
@@ -74,7 +74,8 @@ export class PostbackHandler {
       }
     }
 
-    const remindComment = '出費は毎月25日までに報告してね！26日に支払い金額を通知するよ！';
+    // 変数を宣言するだけで使用していないため、コメントアウトまたは削除
+    // const remindComment = '出費は毎月25日までに報告してね！26日に支払い金額を通知するよ！';
     
     switch(action) {
       case 'report':
@@ -97,7 +98,8 @@ export class PostbackHandler {
   private async getHouseworkStatus(userId: string): Promise<string> {
     try {
       // 実際の実装では、Google Sheetsから家事の状況を取得する
-      return '今日はまだ家事をやってないみたい。\n報告するときは、「フォーム」って話しかけてね！';
+      const message = '今日はまだ家事をやってないみたい。\n報告するときは、「フォーム」って話しかけてね！';
+      return message;
     } catch (error) {
       console.error('Error getting housework status:', error);
       return 'エラーが発生しました。もう一度お試しください。';
