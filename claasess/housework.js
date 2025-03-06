@@ -152,3 +152,5 @@ ${this.formUrl}?usp=pp_url&entry.1025033203=${date}`;
     return this.graph;
   }
 }
+
+module.exports = Housework;
