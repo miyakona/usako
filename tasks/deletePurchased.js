@@ -1,3 +1,5 @@
+const Purchase = require('../claasess/purchase');
+
 class DeletePurchased extends commandBase { // eslint-disable-line no-unused-vars, no-undef
 
   constructor() {
@@ -14,7 +16,7 @@ class DeletePurchased extends commandBase { // eslint-disable-line no-unused-var
    */
   run() {
     Logger.log('called ' + this.constructor.name + ':run()');
-    const purchase = new Purchase(); // eslint-disable-line no-undef
+    const purchase = new Purchase();
     const sheet = purchase.getSheet();
     const lastRow = sheet.getLastRow() - 1;
 
@@ -47,3 +49,5 @@ function deletePurchased () { // eslint-disable-line no-unused-vars
   const batch = new DeletePurchased();
   batch.main();
 }
+
+module.exports = DeletePurchased;
