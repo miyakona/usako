@@ -9,5 +9,11 @@ module.exports = {
     '^.+\\.(js|jsx)$': 'babel-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/worker/src/__tests__/'],
+  collectCoverageFrom: [
+    'gas/src/**/*.js',
+    '!gas/src/test/**',
+    '!**/node_modules/**',
+    '!**/dist/**'
+  ],
 }; 

@@ -25,7 +25,7 @@ jobs:
         run: npm ci
 
       - name: Run tests with coverage
-        run: npm run test:coverage -- --testPathIgnorePatterns="worker/src/__tests__"
+        run: npm run test:coverage -- --testPathPattern="gas/src"
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
