@@ -88,22 +88,19 @@ describe('LineMessagingApi', () => {
     it('正しい形式でボタンテンプレートメッセージを返信すること', () => {
       const replyToken = 'test-reply-token';
       const altText = 'テスト代替テキスト';
-      const thumbnailImageUrl = 'https://example.com/image.jpg';
-      const imageAspectRatio = 'square';
-      const imageSize = 'contain';
-      const title = 'テストタイトル';
-      const text = 'テストメッセージ';
-      const actions = [{ type: 'message', label: 'テスト', text: 'テスト' }];
+      const options = {
+        thumbnailImageUrl: 'https://example.com/image.jpg',
+        imageAspectRatio: 'square',
+        imageSize: 'contain',
+        title: 'テストタイトル',
+        text: 'テストメッセージ',
+        actions: [{ type: 'message', label: 'テスト', text: 'テスト' }]
+      };
 
       lineMessagingApi.replyTemplateButton(
         replyToken,
         altText,
-        thumbnailImageUrl,
-        imageAspectRatio,
-        imageSize,
-        title,
-        text,
-        actions
+        options
       );
 
       expect(mockUrlFetchApp.fetch).toHaveBeenCalledWith(
@@ -116,12 +113,12 @@ describe('LineMessagingApi', () => {
               altText,
               template: {
                 type: 'buttons',
-                thumbnailImageUrl,
-                imageAspectRatio,
-                imageSize,
-                title,
-                text,
-                actions,
+                thumbnailImageUrl: options.thumbnailImageUrl,
+                imageAspectRatio: options.imageAspectRatio,
+                imageSize: options.imageSize,
+                title: options.title,
+                text: options.text,
+                actions: options.actions,
               },
             }],
           }),

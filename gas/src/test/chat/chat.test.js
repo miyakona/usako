@@ -35,6 +35,11 @@ describe('Chat', () => {
       log: jest.fn(),
     };
 
+    // Utilitiesオブジェクトをモック化
+    global.Utilities = {
+      getUuid: jest.fn().mockReturnValue('12345678-1234-1234-1234-123456789abc'),
+    };
+
     chat = new Chat();
   });
 
@@ -67,13 +72,9 @@ describe('Chat', () => {
         getValues: jest.fn().mockReturnValue(mockMessages),
       });
 
-      // Math.randomをモック化
-      const mockRandom = jest.spyOn(Math, 'random');
-      mockRandom.mockReturnValue(0.5); // 2番目のメッセージを選択
-
       const result = chat.getMessage();
 
-      expect(result).toEqual(['さようなら']);
+      expect(result).toEqual(['こんにちは']);
       expect(mockSheet.getRange).toHaveBeenCalledWith(1, 1, 3, 1);
     });
   });
