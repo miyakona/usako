@@ -1,5 +1,6 @@
 import { PostbackHandler } from '../../handlers/postbackHandler';
 import { LineMessagingService } from '../../services/lineMessaging';
+import { GoogleSheetsService } from '../../services/googleSheets';
 import { PurchaseHandler } from '../../handlers/purchaseHandler';
 import { Env } from '../../types';
 
@@ -10,6 +11,7 @@ jest.mock('../../handlers/purchaseHandler');
 describe('PostbackHandler', () => {
   let postbackHandler: PostbackHandler;
   let mockLineService: jest.Mocked<LineMessagingService>;
+  let mockSheetsService: jest.Mocked<GoogleSheetsService>;
   let mockPurchaseHandler: jest.Mocked<PurchaseHandler>;
 
   beforeEach(() => {
@@ -25,6 +27,7 @@ describe('PostbackHandler', () => {
     };
 
     mockLineService = new LineMessagingService(mockEnv) as jest.Mocked<LineMessagingService>;
+    mockSheetsService = new GoogleSheetsService(mockEnv) as jest.Mocked<GoogleSheetsService>;
     
     // PurchaseHandlerのモックを設定
     mockPurchaseHandler = {
@@ -38,6 +41,9 @@ describe('PostbackHandler', () => {
     // LineMessagingServiceのモックを設定
     mockLineService.replyText = jest.fn().mockResolvedValue(undefined);
     (LineMessagingService as jest.Mock).mockImplementation(() => mockLineService);
+    
+    // GoogleSheetsServiceのモックを設定
+    (GoogleSheetsService as jest.Mock).mockImplementation(() => mockSheetsService);
     
     postbackHandler = new PostbackHandler(mockEnv);
   });
@@ -76,6 +82,87 @@ describe('PostbackHandler', () => {
       expect(mockLineService.replyText).toHaveBeenCalledWith(
         'replyToken', 
         'エラー。意図しないアクションが指定されました。'
+      );
+    });
+
+    it('houseworkタイプのreportアクションの場合は家事報告フォームのURLを返すこと', async () => {
+      await postbackHandler.handlePostback('replyToken', '{"type":"housework", "action":"report"}', 'userId');
+      
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
+        'replyToken', 
+        expect.stringContaining('家事の報告だね！')
+      );
+    });
+
+    it('houseworkタイプのcheckアクションの場合は家事状況を返すこと', async () => {
+      await postbackHandler.handlePostback('replyToken', '{"type":"housework", "action":"check"}', 'userId');
+      
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
+        'replyToken', 
+        expect.stringContaining('今日はまだ家事をやってないみたい')
+      );
+    });
+
+    it('houseworkタイプの不明なアクションの場合はエラーメッセージを返すこと', async () => {
+      await postbackHandler.handlePostback('replyToken', '{"type":"housework", "action":"unknown"}', 'userId');
+      
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
+        'replyToken', 
+        'エラー。意図しないアクションが指定されました。'
+      );
+    });
+
+    it('accountBookタイプのreportアクションの場合は家計簿報告フォームのURLを返すこと', async () => {
+      await postbackHandler.handlePostback('replyToken', '{"type":"accountBook", "action":"report"}', 'userId');
+      
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
+        'replyToken', 
+        expect.stringContaining('家計の報告だね！')
+      );
+    });
+
+    it('accountBookタイプのcheckアクションの場合は家計簿状況を返すこと', async () => {
+      await postbackHandler.handlePostback('replyToken', '{"type":"accountBook", "action":"check"}', 'userId');
+      
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
+        'replyToken', 
+        expect.stringContaining('報告済の支出はないみたい')
+      );
+    });
+
+    it('accountBookタイプのsummaryアクションの場合は家計簿サマリを返すこと', async () => {
+      await postbackHandler.handlePostback('replyToken', '{"type":"accountBook", "action":"summary"}', 'userId');
+      
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
+        'replyToken', 
+        expect.stringContaining('現時点での支払内容はこんな感じだよ')
+      );
+    });
+
+    it('accountBookタイプの不明なアクションの場合はエラーメッセージを返すこと', async () => {
+      await postbackHandler.handlePostback('replyToken', '{"type":"accountBook", "action":"unknown"}', 'userId');
+      
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
+        'replyToken', 
+        'エラー。意図しないアクションが指定されました。'
+      );
+    });
+
+    it('不明なタイプの場合はエラーメッセージを返すこと', async () => {
+      await postbackHandler.handlePostback('replyToken', '{"type":"unknown", "action":"test"}', 'userId');
+      
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
+        'replyToken', 
+        'エラー。意図しないアクションが指定されました。'
+      );
+    });
+
+    it('JSONでないデータの場合はエラーメッセージを返すこと', async () => {
+      await postbackHandler.handlePostback('replyToken', 'invalid-json', 'userId');
+      
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
+        'replyToken', 
+        'エラーが発生しました。もう一度お試しください。'
       );
     });
   });
