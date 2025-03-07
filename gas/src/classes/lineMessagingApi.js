@@ -40,7 +40,7 @@ class LineMessagingApi{ // eslint-disable-line no-unused-vars
    *
    * @param string replyToken 返信用トークン
    * @param string altText 代替テキスト
-   * @param object options ボタンテンプレートのオプション
+   * @param object options オプション
    * @param string options.thumbnailImageUrl サムネイル画像のURL
    * @param string options.imageAspectRatio 画像のアスペクト比
    * @param string options.imageSize 画像の表示形式
