@@ -21,8 +21,8 @@ jobs:
           cd worker && npm install
       - name: Run tests with coverage
         run: |
-          npm test -- --coverage
-          cd worker && npm test -- --coverage
+          cd worker && npm run test:coverage
+          
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@master
         env:
