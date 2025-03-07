@@ -20,17 +20,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Run GAS tests with coverage
-        run: |
-          cd gas
-          npm ci
-          npm run test:coverage
+      - name: Install dependencies
+        run: npm install
 
-      - name: Run Worker tests with coverage
-        run: |
-          cd worker
-          npm ci
-          npm run test:coverage
+      - name: Run tests with coverage
+        run: npm test
 
   sonarcloud:
     name: SonarCloud
@@ -53,4 +47,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # Generate this on SonarCloud.io
-          SONAR_HOST_URL: https://sonarcloud.io
+          SONAR_HOST_URL: https://sonarcloud.io 
