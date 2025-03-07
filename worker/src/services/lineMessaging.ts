@@ -1,7 +1,7 @@
 import { Env, LineMessage, LineAction, LineColumn } from '../types';
 
 export class LineMessagingService {
-  private channelAccessToken: string;
+  private readonly channelAccessToken: string;
 
   constructor(env: Env) {
     this.channelAccessToken = env.LINE_CHANNEL_ACCESS_TOKEN;
@@ -23,29 +23,31 @@ export class LineMessagingService {
    * ボタンテンプレートを返信する
    */
   async replyTemplateButton(
-    replyToken: string, 
-    altText: string, 
-    thumbnailImageUrl: string, 
-    imageAspectRatio: 'rectangle' | 'square', 
-    imageSize: 'cover' | 'contain', 
-    title: string, 
-    text: string, 
-    actions: LineAction[]
+    replyToken: string,
+    altText: string,
+    options: {
+      thumbnailImageUrl: string;
+      imageAspectRatio?: 'rectangle' | 'square';
+      imageSize?: 'cover' | 'contain';
+      title: string;
+      text: string;
+      actions: LineAction[];
+    }
   ): Promise<void> {
     const message: LineMessage = {
       type: 'template',
       altText: altText,
       template: {
         type: 'buttons',
-        thumbnailImageUrl: thumbnailImageUrl,
-        imageAspectRatio: imageAspectRatio,
-        imageSize: imageSize,
-        title: title,
-        text: text,
-        actions: actions
+        thumbnailImageUrl: options.thumbnailImageUrl,
+        imageAspectRatio: options.imageAspectRatio || 'rectangle',
+        imageSize: options.imageSize || 'cover',
+        title: options.title,
+        text: options.text,
+        actions: options.actions
       }
     };
-    
+
     await this.reply(replyToken, [message]);
   }
 

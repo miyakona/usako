@@ -36,18 +36,19 @@ class LineMessagingApi{ // eslint-disable-line no-unused-vars
   }
 
   /**
-   * テンプレートボタンメッセージの返信をする
+   * ボタンテンプレートを返信する
    *
    * @param string replyToken 返信用トークン
    * @param string altText 代替テキスト
-   * @param string thumbnailImageUrl 画像URL
-   * @param string imageAspectRatio 画像のアスペクト比
-   * @param string imageSize 画像の表示形式
-   * @param string title タイトル
-   * @param string text メッセージテキスト
-   * @param string actions タップされたときのアクション
+   * @param object options ボタンテンプレートのオプション
+   * @param string options.thumbnailImageUrl サムネイル画像のURL
+   * @param string options.imageAspectRatio 画像のアスペクト比
+   * @param string options.imageSize 画像の表示形式
+   * @param string options.title タイトル
+   * @param string options.text メッセージテキスト
+   * @param string options.actions タップされたときのアクション
    */
-  replyTemplateButton(replyToken, altText, thumbnailImageUrl, imageAspectRatio, imageSize, title, text, actions) {
+  replyTemplateButton(replyToken, altText, options) {
     Logger.log('called ' + this.constructor.name + ':replyTemplateButton()');
     const postData = {
       "replyToken" : replyToken,
@@ -57,17 +58,17 @@ class LineMessagingApi{ // eslint-disable-line no-unused-vars
           "altText": altText,
           "template": {
             "type": "buttons",
-            "thumbnailImageUrl": thumbnailImageUrl,
-            "imageAspectRatio": imageAspectRatio,
-            "imageSize": imageSize,
-            "title": title,
-            "text": text,
-            "actions": actions
+            "thumbnailImageUrl": options.thumbnailImageUrl,
+            "imageAspectRatio": options.imageAspectRatio || 'rectangle',
+            "imageSize": options.imageSize || 'cover',
+            "title": options.title,
+            "text": options.text,
+            "actions": options.actions
           }
         }
       ]
     };
-    this.reply(postData);
+    return this.reply(postData);
   }
 
   /**

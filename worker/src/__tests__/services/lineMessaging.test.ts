@@ -68,57 +68,56 @@ describe('LineMessagingService', () => {
     it('should send button template message', async () => {
       const replyToken = 'test-reply-token';
       const altText = 'テストボタン';
-      const imageUrl = 'https://example.com/image.jpg';
-      const imageAspectRatio = 'square';
-      const imageSize = 'contain';
-      const title = 'テストタイトル';
-      const text = 'テストテキスト';
-      const actions = [
-        {
-          type: 'postback',
-          label: 'アクション1',
-          data: 'action1'
-        }
-      ];
+      const options = {
+        thumbnailImageUrl: 'https://example.com/image.jpg',
+        imageAspectRatio: 'square' as 'square' | 'rectangle',
+        imageSize: 'contain' as 'contain' | 'cover',
+        title: 'テストタイトル',
+        text: 'テストテキスト',
+        actions: [
+          {
+            type: 'postback',
+            label: 'アクション1',
+            data: 'action1'
+          }
+        ]
+      };
 
       mockFetch.mockResolvedValueOnce({ ok: true });
 
       await lineService.replyTemplateButton(
         replyToken,
         altText,
-        imageUrl,
-        imageAspectRatio,
-        imageSize,
-        title,
-        text,
-        actions
+        options
       );
 
       expect(mockFetch).toHaveBeenCalledWith(
         'https://api.line.me/v2/bot/message/reply',
-        {
+        expect.objectContaining({
           method: 'POST',
-          headers: {
+          headers: expect.objectContaining({
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${mockEnv.LINE_CHANNEL_ACCESS_TOKEN}`
-          },
+            'Authorization': 'Bearer test-token'
+          }),
           body: JSON.stringify({
             replyToken: replyToken,
-            messages: [{
-              type: 'template',
-              altText: altText,
-              template: {
-                type: 'buttons',
-                thumbnailImageUrl: imageUrl,
-                imageAspectRatio: imageAspectRatio,
-                imageSize: imageSize,
-                title: title,
-                text: text,
-                actions: actions
+            messages: [
+              {
+                type: 'template',
+                altText: altText,
+                template: {
+                  type: 'buttons',
+                  thumbnailImageUrl: options.thumbnailImageUrl,
+                  imageAspectRatio: options.imageAspectRatio,
+                  imageSize: options.imageSize,
+                  title: options.title,
+                  text: options.text,
+                  actions: options.actions
+                }
               }
-            }]
+            ]
           })
-        }
+        })
       );
     });
   });

@@ -1,4 +1,4 @@
-class commandBase { // eslint-disable-line no-unused-vars
+class CommandBase { // eslint-disable-line no-unused-vars
 
   constructor (name){
     this.name = name;
@@ -39,8 +39,12 @@ ${stack}`;
   /**
    * 実挙動メソッド。
    * 内容は継承先のクラスにて実装。
+   * このメソッドは意図的に空にしており、サブクラスでオーバーライドすることを想定しています。
+   * @abstract
    */
-  run() {}
+  run() {
+    // このメソッドは抽象メソッドとして機能し、サブクラスで実装されることを期待しています
+  }
 }
 
-module.exports = commandBase;
+module.exports = CommandBase;

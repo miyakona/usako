@@ -42,23 +42,25 @@ export class MessageHandler {
         await this.lineService.replyTemplateButton(
           replyToken,
           '家事管理テンプレート',
-          'https://example.com/housework.jpg', // 実際の画像URLに置き換える
-          'square',
-          'contain',
-          '家事管理',
-          '家事管理だね。\n報告？それとも確認？',
-          [
-            {
-              type: 'postback',
-              label: '家事を報告する',
-              data: '{"type":"housework", "action":"report"}'
-            },
-            {
-              type: 'postback',
-              label: '家事の状況を確認する',
-              data: '{"type":"housework", "action":"check"}'
-            }
-          ]
+          {
+            thumbnailImageUrl: 'https://example.com/housework.jpg', // 実際の画像URLに置き換える
+            imageAspectRatio: 'square',
+            imageSize: 'contain',
+            title: '家事管理',
+            text: '家事管理だね。\n報告？それとも確認？',
+            actions: [
+              {
+                type: 'postback',
+                label: '報告する',
+                data: JSON.stringify({ type: 'housework', action: 'report' })
+              },
+              {
+                type: 'postback',
+                label: '確認する',
+                data: JSON.stringify({ type: 'housework', action: 'check' })
+              }
+            ]
+          }
         );
         break;
 
@@ -67,24 +69,31 @@ export class MessageHandler {
         // 家計簿のボタンテンプレートを返信
         await this.lineService.replyTemplateButton(
           replyToken,
-          '家計管理テンプレート',
-          'https://example.com/accountbook.jpg', // 実際の画像URLに置き換える
-          'square',
-          'contain',
-          '家計簿',
-          '家計管理だね。\n報告？それとも確認？',
-          [
-            {
-              type: 'postback',
-              label: '出費を書き込む',
-              data: '{"type":"accountBook", "action":"report"}'
-            },
-            {
-              type: 'postback',
-              label: '報告済の支出を確認する',
-              data: '{"type":"accountBook", "action":"check"}'
-            }
-          ]
+          '家計簿テンプレート',
+          {
+            thumbnailImageUrl: 'https://example.com/accountbook.jpg', // 実際の画像URLに置き換える
+            imageAspectRatio: 'square',
+            imageSize: 'contain',
+            title: '家計簿',
+            text: '家計簿だね。\n報告？それとも確認？',
+            actions: [
+              {
+                type: 'postback',
+                label: '報告する',
+                data: JSON.stringify({ type: 'accountBook', action: 'report' })
+              },
+              {
+                type: 'postback',
+                label: '確認する',
+                data: JSON.stringify({ type: 'accountBook', action: 'check' })
+              },
+              {
+                type: 'postback',
+                label: '今月の支出',
+                data: JSON.stringify({ type: 'accountBook', action: 'summary' })
+              }
+            ]
+          }
         );
         break;
 
@@ -93,29 +102,31 @@ export class MessageHandler {
         // 買い物リストのボタンテンプレートを返信
         await this.lineService.replyTemplateButton(
           replyToken,
-          '買い物リスト管理',
-          'https://example.com/shopping.jpg', // 実際の画像URLに置き換える
-          'square',
-          'contain',
-          '買い物リスト',
-          '買い物リストだね。\n何をする？',
-          [
-            {
-              type: 'postback',
-              label: 'リストを確認する',
-              data: '{"type":"purchase", "action":"list"}'
-            },
-            {
-              type: 'postback',
-              label: '品目を追加する',
-              data: '{"type":"purchase", "action":"add"}'
-            },
-            {
-              type: 'postback',
-              label: '品目を削除する',
-              data: '{"type":"purchase", "action":"delete"}'
-            }
-          ]
+          '買い物リストテンプレート',
+          {
+            thumbnailImageUrl: 'https://example.com/purchase.jpg', // 実際の画像URLに置き換える
+            imageAspectRatio: 'square',
+            imageSize: 'contain',
+            title: '買い物リスト',
+            text: '買い物リストだね。\n何をする？',
+            actions: [
+              {
+                type: 'postback',
+                label: 'リストを見る',
+                data: JSON.stringify({ type: 'purchase', action: 'list' })
+              },
+              {
+                type: 'postback',
+                label: '追加する',
+                data: JSON.stringify({ type: 'purchase', action: 'add' })
+              },
+              {
+                type: 'postback',
+                label: '削除する',
+                data: JSON.stringify({ type: 'purchase', action: 'delete' })
+              }
+            ]
+          }
         );
         break;
 
@@ -153,7 +164,7 @@ export class MessageHandler {
 
       default:
         // 買い出しリストの処理
-        if (text.match(/買い出し/)) {
+        if (/買い出し/.exec(text)) {
           console.log('買い出しリストコマンドを処理');
           const response = await this.purchaseHandler.handleMessage(text);
           await this.lineService.replyText(replyToken, response);

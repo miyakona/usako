@@ -66,12 +66,14 @@ describe('Message Handling Integration Tests', () => {
       expect(mockLineService.replyTemplateButton).toHaveBeenCalledWith(
         event.replyToken,
         expect.any(String),
-        expect.any(String),
-        expect.any(String),
-        expect.any(String),
-        expect.any(String),
-        expect.any(String),
-        expect.any(Array)
+        expect.objectContaining({
+          thumbnailImageUrl: expect.any(String),
+          imageAspectRatio: expect.any(String),
+          imageSize: expect.any(String),
+          title: expect.any(String),
+          text: expect.any(String),
+          actions: expect.any(Array)
+        })
       );
     });
 

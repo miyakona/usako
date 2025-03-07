@@ -77,8 +77,8 @@ class AccountBook { // eslint-disable-line no-unused-vars
     if (dt.getDate() >= 26) {
       month += 1;
       if (month > 12) {
-        month = 1;
         year += 1;
+        month = 1;
       }
     }
 

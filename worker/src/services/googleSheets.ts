@@ -4,8 +4,8 @@ import { JWT } from 'google-auth-library';
 import * as nodeCrypto from 'crypto';
 
 export class GoogleSheetsService {
-  private spreadsheetId: string;
-  private sheets: any;
+  private readonly spreadsheetId: string;
+  private readonly sheets: any;
 
   constructor(env: Env) {
     this.spreadsheetId = env.SPREADSHEET_ID;

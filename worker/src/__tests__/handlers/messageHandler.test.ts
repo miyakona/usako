@@ -28,21 +28,23 @@ describe('MessageHandler', () => {
       expect(LineMessagingService.prototype.replyTemplateButton).toHaveBeenCalledWith(
         replyToken,
         '家事管理テンプレート',
-        expect.any(String),
-        'square',
-        'contain',
-        '家事管理',
-        expect.any(String),
-        expect.arrayContaining([
-          expect.objectContaining({
-            type: 'postback',
-            label: '家事を報告する'
-          }),
-          expect.objectContaining({
-            type: 'postback',
-            label: '家事の状況を確認する'
-          })
-        ])
+        expect.objectContaining({
+          thumbnailImageUrl: expect.any(String),
+          imageAspectRatio: 'square',
+          imageSize: 'contain',
+          title: '家事管理',
+          text: expect.any(String),
+          actions: expect.arrayContaining([
+            expect.objectContaining({
+              type: 'postback',
+              label: '報告する'
+            }),
+            expect.objectContaining({
+              type: 'postback',
+              label: '確認する'
+            })
+          ])
+        })
       );
     });
 
@@ -54,22 +56,28 @@ describe('MessageHandler', () => {
 
       expect(LineMessagingService.prototype.replyTemplateButton).toHaveBeenCalledWith(
         replyToken,
-        '家計管理テンプレート',
-        expect.any(String),
-        'square',
-        'contain',
-        '家計簿',
-        expect.any(String),
-        expect.arrayContaining([
-          expect.objectContaining({
-            type: 'postback',
-            label: '出費を書き込む'
-          }),
-          expect.objectContaining({
-            type: 'postback',
-            label: '報告済の支出を確認する'
-          })
-        ])
+        '家計簿テンプレート',
+        expect.objectContaining({
+          thumbnailImageUrl: expect.any(String),
+          imageAspectRatio: 'square',
+          imageSize: 'contain',
+          title: '家計簿',
+          text: expect.any(String),
+          actions: expect.arrayContaining([
+            expect.objectContaining({
+              type: 'postback',
+              label: '報告する'
+            }),
+            expect.objectContaining({
+              type: 'postback',
+              label: '確認する'
+            }),
+            expect.objectContaining({
+              type: 'postback',
+              label: '今月の支出'
+            })
+          ])
+        })
       );
     });
 
