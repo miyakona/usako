@@ -1,6 +1,7 @@
 import { Env } from '../types';
 import { google } from 'googleapis';
 import { JWT } from 'google-auth-library';
+import * as nodeCrypto from 'crypto';
 
 export class GoogleSheetsService {
   private spreadsheetId: string;
@@ -212,12 +213,17 @@ export class GoogleSheetsService {
         return 'こんにちは！';
       }
       
-      // より安全な乱数生成方法を使用
-      // crypto.getRandomValues()を使用して暗号学的に安全な乱数を生成
-      const randomArray = new Uint32Array(1);
-      crypto.getRandomValues(randomArray);
-      // 0-1の範囲に正規化
-      const randomValue = randomArray[0] / 0xffffffff;
+      // Node.jsのcryptoモジュールを使用して安全な乱数を生成
+      let randomValue: number;
+      try {
+        // まず、ブラウザ環境のcrypto.getRandomValuesを試す
+        const randomArray = new Uint32Array(1);
+        crypto.getRandomValues(randomArray);
+        randomValue = randomArray[0] / 0xffffffff;
+      } catch (e) {
+        // ブラウザ環境のcryptoが使えない場合はNode.jsのcryptoを使用
+        randomValue = nodeCrypto.randomBytes(4).readUInt32BE(0) / 0xffffffff;
+      }
       
       // ランダムにメッセージを選択
       const randomIndex = Math.floor(randomValue * messages.length);
