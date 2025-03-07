@@ -31,7 +31,14 @@ class Chat { // eslint-disable-line no-unused-vars
   getMessage() {
     Logger.log('called ' + this.constructor.name + ':getMessage()');
     const message = this.sheet.getRange(1, 1, this.sheet.getLastRow(), 1).getValues();
-    return message[Math.floor(Math.random() * message.length)];
+    
+    // より安全な乱数生成方法を使用
+    // Utilities.getUuid()を使用して暗号学的に安全な乱数を生成
+    const uuid = Utilities.getUuid();
+    // UUIDの最初の8文字を16進数として解釈し、0-1の範囲に正規化
+    const randomValue = parseInt(uuid.substring(0, 8), 16) / 0xffffffff;
+    
+    return message[Math.floor(randomValue * message.length)];
   }
 }
 

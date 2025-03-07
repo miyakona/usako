@@ -212,8 +212,15 @@ export class GoogleSheetsService {
         return 'こんにちは！';
       }
       
+      // より安全な乱数生成方法を使用
+      // crypto.getRandomValues()を使用して暗号学的に安全な乱数を生成
+      const randomArray = new Uint32Array(1);
+      crypto.getRandomValues(randomArray);
+      // 0-1の範囲に正規化
+      const randomValue = randomArray[0] / 0xffffffff;
+      
       // ランダムにメッセージを選択
-      const randomIndex = Math.floor(Math.random() * messages.length);
+      const randomIndex = Math.floor(randomValue * messages.length);
       return messages[randomIndex][0] || 'こんにちは！';
     } catch (error: any) {
       console.error('Failed to get random chat message:', error);
