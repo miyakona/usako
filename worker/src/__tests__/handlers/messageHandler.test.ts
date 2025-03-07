@@ -115,4 +115,76 @@ describe('MessageHandler', () => {
       expect(initializeSpy).toHaveBeenCalled();
     });
   });
+});
+
+describe('MessageHandler Tutorial Functionality', () => {
+  let messageHandler: MessageHandler;
+  let mockLineService: jest.Mocked<LineMessagingService>;
+  let mockSheetsService: jest.Mocked<GoogleSheetsService>;
+  let mockEnv: Env;
+
+  beforeEach(() => {
+    mockLineService = {
+      replyTemplateButton: jest.fn(),
+      replyText: jest.fn(),
+    } as any;
+
+    mockSheetsService = {
+      // モックに必要なメソッドを追加
+    } as any;
+
+    mockEnv = {
+      // 必要な環境変数をモック
+    } as Env;
+
+    messageHandler = new MessageHandler(mockEnv, mockLineService, mockSheetsService);
+  });
+
+  describe('Tutorial Functionality', () => {
+    const mockReplyToken = 'test-reply-token';
+
+    it('should handle tutorial message for housework', async () => {
+      await messageHandler.handleMessage(mockReplyToken, '家事管理');
+      
+      expect(mockLineService.replyTemplateButton).toHaveBeenCalledWith(
+        mockReplyToken,
+        '家事管理テンプレート',
+        expect.objectContaining({
+          title: '家事管理',
+          text: expect.any(String),
+          actions: expect.arrayContaining([
+            expect.objectContaining({ type: 'postback', label: '報告する' }),
+            expect.objectContaining({ type: 'postback', label: '確認する' })
+          ])
+        })
+      );
+    });
+
+    it('should handle tutorial message for account book', async () => {
+      await messageHandler.handleMessage(mockReplyToken, '家計簿');
+      
+      expect(mockLineService.replyTemplateButton).toHaveBeenCalledWith(
+        mockReplyToken,
+        '家計簿テンプレート',
+        expect.objectContaining({
+          title: '家計簿',
+          text: expect.any(String),
+          actions: expect.arrayContaining([
+            expect.objectContaining({ type: 'postback', label: '報告する' }),
+            expect.objectContaining({ type: 'postback', label: '確認する' }),
+            expect.objectContaining({ type: 'postback', label: '今月の支出' })
+          ])
+        })
+      );
+    });
+
+    it('should handle tutorial message for purchase list', async () => {
+      await messageHandler.handleMessage(mockReplyToken, '買い出しリスト');
+      
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
+        mockReplyToken,
+        '買い出しリストの操作を選択してください。'
+      );
+    });
+  });
 }); 
