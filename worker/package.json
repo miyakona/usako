@@ -28,9 +28,7 @@
     ],
     "testMatch": [
       "<rootDir>/src/**/*.test.ts"
-    ],
-    "collectCoverage": true,
-    "coverageReporters": ["text", "lcov"]
+    ]
   },
   "keywords": [
     "cloudflare-workers",
