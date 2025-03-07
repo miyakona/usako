@@ -8,7 +8,7 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "test": "jest",
-    "test:coverage": "jest --coverage",
+    "test:coverage": "jest --coverage --coverageDirectory=coverage --coverageReporters=text-lcov",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix"
   },
@@ -28,7 +28,10 @@
     ],
     "testMatch": [
       "<rootDir>/src/**/*.test.ts"
-    ]
+    ],
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "coverageReporters": ["text", "lcov"]
   },
   "keywords": [
     "cloudflare-workers",
