@@ -8,7 +8,8 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "test": "jest",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix"
   },
   "jest": {
     "preset": "ts-jest",
@@ -26,12 +27,7 @@
     ],
     "testMatch": [
       "<rootDir>/src/**/*.test.ts"
-    ],
-    "globals": {
-      "ts-jest": {
-        "tsconfig": "<rootDir>/tsconfig.json"
-      }
-    }
+    ]
   },
   "keywords": [
     "cloudflare-workers",
