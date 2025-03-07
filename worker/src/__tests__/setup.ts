@@ -1,4 +1,4 @@
-import { jest } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 
 // モックの設定
 jest.mock('@line/bot-sdk');
@@ -12,16 +12,6 @@ process.env.LINE_CHANNEL_SECRET = 'test-secret';
 process.env.GOOGLE_SERVICE_ACCOUNT_KEY = 'test-key';
 process.env.GOOGLE_SHEETS_CREDENTIALS = 'test-credentials';
 process.env.GOOGLE_SHEETS_SPREADSHEET_ID = 'test-sheets-id';
-
-// Jest の型定義を追加
-type JestDescribe = (description: string, callback: () => void) => void;
-type JestIt = (description: string, callback: () => void) => void;
-type JestExpect = (actual: any) => any;
-
-// グローバルスコープに Jest の関数を追加
-(global as any).describe = jest.describe as JestDescribe;
-(global as any).it = jest.it as JestIt;
-(global as any).expect = jest.expect as JestExpect;
 
 // デバッグ用のログ
 console.log('Setup file loaded successfully');
