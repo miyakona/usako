@@ -26,12 +26,19 @@ yyy
   constructor(sheet: GoogleSheetsService, lineMessaging: LineMessagingService) {
     this.sheet = sheet;
     this.lineMessaging = lineMessaging;
-    this.imgUrl = process.env.IMG_PURCHASE || '';
-    
-    // シートの初期化を非同期で実行
-    this.initializeSheet().catch(error => {
+    this.imgUrl = process.env.IMG_PURCHASE ?? '';
+  }
+
+  /**
+   * シートの初期化を行う
+   * クラスのインスタンス化後に呼び出す必要がある
+   */
+  async initialize(): Promise<void> {
+    try {
+      await this.initializeSheet();
+    } catch (error) {
       console.error('Failed to initialize purchase list sheet:', error);
-    });
+    }
   }
 
   /**

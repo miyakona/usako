@@ -30,6 +30,7 @@ describe('PostbackHandler', () => {
     mockPurchaseHandler = {
       handleMessage: jest.fn(),
       getTemplateColumn: jest.fn(),
+      initialize: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<PurchaseHandler>;
     
     (PurchaseHandler as jest.Mock).mockImplementation(() => mockPurchaseHandler);

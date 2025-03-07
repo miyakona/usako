@@ -15,6 +15,17 @@ export class MessageHandler {
     this.sheetsService = new GoogleSheetsService(env);
     this.purchaseHandler = new PurchaseHandler(this.sheetsService, this.lineService);
     this.chatHandler = new ChatHandler(this.sheetsService, this.lineService);
+    
+    // 初期化処理を実行
+    this.initialize();
+  }
+
+  /**
+   * 初期化処理
+   */
+  private initialize(): void {
+    // 非同期処理だが、エラーハンドリングは内部で行われるため、awaitしない
+    this.purchaseHandler.initialize();
   }
 
   /**

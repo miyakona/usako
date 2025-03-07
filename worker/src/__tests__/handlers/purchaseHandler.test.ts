@@ -30,6 +30,8 @@ describe('PurchaseHandler', () => {
     mockSheetsService.initializePurchaseListSheet = jest.fn().mockResolvedValue(undefined);
     
     purchaseHandler = new PurchaseHandler(mockSheetsService, mockLineService);
+    // 初期化メソッドを呼び出し
+    purchaseHandler.initialize();
   });
 
   describe('handleMessage', () => {
