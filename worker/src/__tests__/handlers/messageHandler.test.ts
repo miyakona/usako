@@ -84,5 +84,24 @@ describe('MessageHandler', () => {
         'こんにちは！何かお手伝いできることはありますか？'
       );
     });
+
+    it('should handle chat command', async () => {
+      const replyToken = 'test-reply-token';
+      const text = 'うさこ〜〜〜';
+      
+      // モックの設定
+      const mockChatHandler = {
+        handleMessage: jest.fn().mockResolvedValue('どうしたの？何か話したいことある？')
+      };
+      (messageHandler as any).chatHandler = mockChatHandler;
+
+      await messageHandler.handleMessage(replyToken, text);
+
+      expect(mockChatHandler.handleMessage).toHaveBeenCalledWith(text);
+      expect(LineMessagingService.prototype.replyText).toHaveBeenCalledWith(
+        replyToken,
+        'どうしたの？何か話したいことある？'
+      );
+    });
   });
 }); 

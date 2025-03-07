@@ -191,4 +191,53 @@ export class GoogleSheetsService {
   async initializePurchaseListSheet(): Promise<void> {
     await this.initializeSheet('買い出しリスト', ['品目', 'ステータス']);
   }
+
+  /**
+   * チャットメッセージをランダムに取得する
+   */
+  async getRandomChatMessage(): Promise<string> {
+    try {
+      const sheetName = 'うさこの言葉';
+      
+      // シートが存在するか確認し、なければ作成
+      const exists = await this.sheetExists(sheetName);
+      if (!exists) {
+        await this.createSheet(sheetName);
+        await this.setValues(sheetName, 'A1', [['こんにちは！']]);
+      }
+      
+      // メッセージを取得
+      const messages = await this.getValues(sheetName, 'A1:A');
+      if (!messages || messages.length === 0) {
+        return 'こんにちは！';
+      }
+      
+      // ランダムにメッセージを選択
+      const randomIndex = Math.floor(Math.random() * messages.length);
+      return messages[randomIndex][0] || 'こんにちは！';
+    } catch (error: any) {
+      console.error('Failed to get random chat message:', error);
+      return 'こんにちは！';
+    }
+  }
+
+  /**
+   * チャットメッセージを追加する
+   */
+  async addChatMessage(message: string): Promise<void> {
+    try {
+      const sheetName = 'うさこの言葉';
+      
+      // シートが存在するか確認し、なければ作成
+      const exists = await this.sheetExists(sheetName);
+      if (!exists) {
+        await this.createSheet(sheetName);
+      }
+      
+      // メッセージを追加
+      await this.appendValues(sheetName, [[message]]);
+    } catch (error: any) {
+      throw new Error(`Failed to add chat message: ${error.message}`);
+    }
+  }
 } 

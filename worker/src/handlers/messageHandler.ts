@@ -2,16 +2,19 @@ import { Env } from '../types';
 import { LineMessagingService } from '../services/lineMessaging';
 import { GoogleSheetsService } from '../services/googleSheets';
 import { PurchaseHandler } from './purchaseHandler';
+import { ChatHandler } from './chatHandler';
 
 export class MessageHandler {
   private readonly lineService: LineMessagingService;
   private readonly sheetsService: GoogleSheetsService;
   private readonly purchaseHandler: PurchaseHandler;
+  private readonly chatHandler: ChatHandler;
 
   constructor(env: Env) {
     this.lineService = new LineMessagingService(env);
     this.sheetsService = new GoogleSheetsService(env);
     this.purchaseHandler = new PurchaseHandler(this.sheetsService, this.lineService);
+    this.chatHandler = new ChatHandler(this.sheetsService, this.lineService);
   }
 
   /**
@@ -131,7 +134,8 @@ export class MessageHandler {
                 text: '家計簿'
               }]
             },
-            this.purchaseHandler.getTemplateColumn()
+            this.purchaseHandler.getTemplateColumn(),
+            this.chatHandler.getTemplateColumn()
           ]
         );
         break;
@@ -141,6 +145,11 @@ export class MessageHandler {
         if (text.match(/買い出し/)) {
           console.log('買い出しリストコマンドを処理');
           const response = await this.purchaseHandler.handleMessage(text);
+          await this.lineService.replyText(replyToken, response);
+        } else if (text.includes('うさこ') || text.includes('うさこ〜〜〜')) {
+          // チャット機能の処理
+          console.log('チャットコマンドを処理');
+          const response = await this.chatHandler.handleMessage(text);
           await this.lineService.replyText(replyToken, response);
         } else {
           // デフォルトの応答

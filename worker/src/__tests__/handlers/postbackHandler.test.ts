@@ -1,6 +1,5 @@
 import { PostbackHandler } from '../../handlers/postbackHandler';
 import { LineMessagingService } from '../../services/lineMessaging';
-import { GoogleSheetsService } from '../../services/googleSheets';
 import { PurchaseHandler } from '../../handlers/purchaseHandler';
 import { Env } from '../../types';
 
