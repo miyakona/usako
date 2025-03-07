@@ -1,14 +1,17 @@
 import { Env } from '../types';
 import { LineMessagingService } from '../services/lineMessaging';
 import { GoogleSheetsService } from '../services/googleSheets';
+import { PurchaseHandler } from './purchaseHandler';
 
 export class PostbackHandler {
   private readonly lineService: LineMessagingService;
   private readonly sheetsService: GoogleSheetsService;
+  private readonly purchaseHandler: PurchaseHandler;
 
   constructor(env: Env) {
     this.lineService = new LineMessagingService(env);
     this.sheetsService = new GoogleSheetsService(env);
+    this.purchaseHandler = new PurchaseHandler(this.sheetsService, this.lineService);
   }
 
   /**
@@ -28,6 +31,10 @@ export class PostbackHandler {
           
         case 'accountBook':
           text = await this.handleAccountBookPostback(parsedData.action);
+          break;
+          
+        case 'purchase':
+          text = await this.handlePurchasePostback(parsedData.action);
           break;
           
         default:
@@ -131,6 +138,22 @@ export class PostbackHandler {
     } catch (error) {
       console.error('Error getting account book summary:', error);
       return 'エラーが発生しました。もう一度お試しください。';
+    }
+  }
+
+  /**
+   * 買い物リストのポストバックを処理する
+   */
+  private async handlePurchasePostback(action: string): Promise<string> {
+    switch(action) {
+      case 'list':
+        return await this.purchaseHandler.handleMessage('買い出し\nリスト');
+      case 'add':
+        return '品目を追加するには、以下のフォーマットで送信してください：\n\n買い出し\n[品目1]\n[品目2]\n...\n欲しい';
+      case 'delete':
+        return '品目を削除するには、以下のフォーマットで送信してください：\n\n買い出し\n[品目1]\n[品目2]\n...\n買ったよ';
+      default:
+        return 'エラー。意図しないアクションが指定されました。';
     }
   }
 } 

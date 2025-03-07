@@ -74,6 +74,37 @@ export class MessageHandler {
         );
         break;
 
+      case '買い物リスト':
+        console.log('買い物リストコマンドを処理');
+        // 買い物リストのボタンテンプレートを返信
+        await this.lineService.replyTemplateButton(
+          replyToken,
+          '買い物リスト管理',
+          'https://example.com/shopping.jpg', // 実際の画像URLに置き換える
+          'square',
+          'contain',
+          '買い物リスト',
+          '買い物リストだね。\n何をする？',
+          [
+            {
+              type: 'postback',
+              label: 'リストを確認する',
+              data: '{"type":"purchase", "action":"list"}'
+            },
+            {
+              type: 'postback',
+              label: '品目を追加する',
+              data: '{"type":"purchase", "action":"add"}'
+            },
+            {
+              type: 'postback',
+              label: '品目を削除する',
+              data: '{"type":"purchase", "action":"delete"}'
+            }
+          ]
+        );
+        break;
+
       case 'チュートリアル':
         console.log('チュートリアルコマンドを処理');
         // チュートリアルのカルーセルテンプレートを返信

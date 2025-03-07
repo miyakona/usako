@@ -196,12 +196,12 @@ ${this.commandSampleAdd}
   getTemplateColumn() {
     return {
       thumbnailImageUrl: this.imgUrl,
-      title: '買い出しリストの管理',
-      text: '買い出しリストの操作ができるよ！\nリストは、2人とも参照可能だよ',
+      title: '買い物リストの管理',
+      text: '買い物リストの操作ができるよ！\nリストは、2人とも参照可能だよ',
       actions: [{
         type: 'message',
         label: 'リストを見てみる',
-        text: this.commandSampleList
+        text: '買い物リスト'
       }]
     };
   }
