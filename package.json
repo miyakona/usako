@@ -8,11 +8,13 @@
     "worker"
   ],
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
+    "test": "npm run test:gas && npm run test:worker",
+    "test:watch": "npm run test:watch:gas & npm run test:watch:worker",
+    "test:coverage": "npm run test:coverage:gas && npm run test:coverage:worker",
     "test:gas": "cd gas && npm test",
     "test:worker": "cd worker && npm test",
+    "test:watch:gas": "cd gas && npm run test:watch",
+    "test:watch:worker": "cd worker && npm run test:watch",
     "test:coverage:gas": "cd gas && npm run test:coverage",
     "test:coverage:worker": "cd worker && npm run test:coverage",
     "lint": "npm run lint:gas && npm run lint:worker",
