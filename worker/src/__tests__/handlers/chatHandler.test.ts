@@ -1,6 +1,7 @@
 import { ChatHandler } from '../../handlers/chatHandler';
 import { GoogleSheetsService } from '../../services/googleSheets';
 import { LineMessagingService } from '../../services/lineMessaging';
+import { Env } from '../../types';
 
 jest.mock('../../services/googleSheets');
 jest.mock('../../services/lineMessaging');
@@ -9,15 +10,25 @@ describe('ChatHandler', () => {
   let chatHandler: ChatHandler;
   let mockSheetsService: jest.Mocked<GoogleSheetsService>;
   let mockLineService: jest.Mocked<LineMessagingService>;
+  let mockEnv: Env;
 
   beforeEach(() => {
+    mockEnv = {
+      LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
+      LINE_CHANNEL_SECRET: 'test-secret',
+      SPREADSHEET_ID: 'test-spreadsheet',
+      GOOGLE_SERVICE_ACCOUNT_KEY: 'test-key',
+      GOOGLE_SHEETS_CREDENTIALS: 'test-credentials',
+      GOOGLE_SHEETS_SPREADSHEET_ID: 'test-sheets-id',
+    };
+
     const MockGoogleSheetsService = GoogleSheetsService as jest.MockedClass<typeof GoogleSheetsService>;
     const MockLineMessagingService = LineMessagingService as jest.MockedClass<typeof LineMessagingService>;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockSheetsService = new MockGoogleSheetsService({} as any) as jest.Mocked<GoogleSheetsService>;
+    mockSheetsService = new MockGoogleSheetsService(mockEnv as any) as jest.Mocked<GoogleSheetsService>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockLineService = new MockLineMessagingService({} as any) as jest.Mocked<LineMessagingService>;
+    mockLineService = new MockLineMessagingService(mockEnv as any) as jest.Mocked<LineMessagingService>;
 
     // モックの設定
     mockSheetsService.getRandomChatMessage = jest.fn().mockResolvedValue('ランダムなメッセージ');
