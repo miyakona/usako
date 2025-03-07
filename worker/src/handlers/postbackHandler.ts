@@ -85,10 +85,11 @@ export class PostbackHandler {
     let month = dt.getMonth() + 1;
 
     if (dt.getDate() >= 26) {
-      month += 1;
-      if (month > 12) {
+      if (month === 12) {
         year += 1;
         month = 1;
+      } else {
+        month += 1;
       }
     }
 

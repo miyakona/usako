@@ -5,7 +5,7 @@ function doPost(e) { // eslint-disable-line no-unused-vars
   const posted_json = JSON.parse(e.postData.contents);
   const events = posted_json.events;
   const line = new LineMessagingApi(); // eslint-disable-line no-undef
-  Logger.log('called ' + arguments.callee.name);
+  Logger.log('called doPost');
   try {
     events.forEach(function(event) {
       switch(event.type) {
@@ -27,7 +27,7 @@ stack trace:
 ${e.stack}`;
     Logger.log(message);
   } finally {
-    Logger.log('end ' + arguments.callee.name);
+    Logger.log('end doPost');
   }
 }
 
@@ -64,7 +64,7 @@ function handlePostback_(replyToken, data, user_id) {
  * @param string replyToken イベントオブジェクト
  */
 function handleMessage_(messageText, replyToken) {
-  Logger.log('called ' + arguments.callee.name);
+  Logger.log('called handleMessage_');
 
   const line = new LineMessagingApi(); // eslint-disable-line no-undef
 
@@ -78,7 +78,7 @@ function handleMessage_(messageText, replyToken) {
   switch(messageText)
   {
     case '家事管理' :
-      Logger.log('called ' + arguments.callee.name + ' 家事管理');
+      Logger.log('called handleMessage_ 家事管理');
       action = housework.getButtonTemplateAction();
       line.replyTemplateButton(
         replyToken,
@@ -93,7 +93,7 @@ function handleMessage_(messageText, replyToken) {
       break;
 
     case '家計簿' :
-      Logger.log('called ' + arguments.callee.name + ' 家計簿');
+      Logger.log('called handleMessage_ 家計簿');
       action = accountBook.getButtonTemplateAction();
       line.replyTemplateButton(
         replyToken,
@@ -108,7 +108,7 @@ function handleMessage_(messageText, replyToken) {
       break;
 
     case 'チュートリアル' :
-      Logger.log('called ' + arguments.callee.name + ' チュートリアル');
+      Logger.log('called handleMessage_ チュートリアル');
       line.replyTemplateCarousel(
         replyToken,
         [
@@ -123,7 +123,7 @@ function handleMessage_(messageText, replyToken) {
 
   // 自由記述系
   if (messageText.match(/買い出し/)) {
-    Logger.log('called ' + arguments.callee.name + ' 買い出し');
+    Logger.log('called handleMessage_ 買い出し');
     line.replyText(replyToken, purchase.getMessage(messageText));
   }
 
