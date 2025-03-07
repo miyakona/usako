@@ -24,8 +24,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests with coverage
+      - name: Run GAS tests with coverage
         run: npm run test:coverage -- --testPathPattern="gas/src"
+
+      - name: Install Worker dependencies
+        run: cd worker && npm ci
+
+      - name: Run Worker tests with coverage
+        run: cd worker && npm run test:coverage
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
