@@ -17,13 +17,12 @@ describe('PostbackHandler', () => {
   beforeEach(() => {
     // 環境変数のモック
     const mockEnv: Env = {
-      SPREADSHEET_ID: 'mock-spreadsheet-id',
-      GOOGLE_SERVICE_ACCOUNT_KEY: JSON.stringify({
-        client_email: 'mock-email@example.com',
-        private_key: 'mock-private-key'
-      }),
-      LINE_CHANNEL_ACCESS_TOKEN: 'mock-token',
-      LINE_CHANNEL_SECRET: 'mock-secret'
+      LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
+      LINE_CHANNEL_SECRET: 'test-secret',
+      GOOGLE_SERVICE_ACCOUNT_KEY: 'test-key',
+      SPREADSHEET_ID: 'test-spreadsheet-id',
+      GOOGLE_SHEETS_CREDENTIALS: 'test-credentials',
+      GOOGLE_SHEETS_SPREADSHEET_ID: 'test-sheets-spreadsheet-id'
     };
 
     mockLineService = new LineMessagingService(mockEnv) as jest.Mocked<LineMessagingService>;

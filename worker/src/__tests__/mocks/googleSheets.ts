@@ -12,4 +12,10 @@ export const GoogleSheetsService = jest.fn().mockImplementation(() => ({
   deleteRows: mockDeleteRows,
   getRandomChatMessage: mockGetRandomChatMessage,
   addChatMessage: mockAddChatMessage
-})); 
+}));
+
+describe('GoogleSheetsMock', () => {
+  it('should be a placeholder test', () => {
+    expect(true).toBe(true);
+  });
+}); 

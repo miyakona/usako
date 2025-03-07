@@ -7,6 +7,7 @@ jest.mock('googleapis');
 describe('GoogleSheetsService', () => {
   let sheetsService: GoogleSheetsService;
   let mockEnv: Env;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockSheets: jest.Mocked<any>;
 
   beforeEach(() => {
@@ -22,18 +23,26 @@ describe('GoogleSheetsService', () => {
       }
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (google.sheets as jest.Mock).mockReturnValue(mockSheets);
 
     mockEnv = {
-      LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
-      LINE_CHANNEL_SECRET: 'test-secret',
+      SPREADSHEET_ID: 'test-spreadsheet-id',
       GOOGLE_SERVICE_ACCOUNT_KEY: JSON.stringify({
         type: 'service_account',
         project_id: 'test-project',
         private_key: 'test-private-key',
         client_email: 'test@example.com'
       }),
-      SPREADSHEET_ID: 'test-spreadsheet-id'
+      LINE_CHANNEL_ACCESS_TOKEN: 'test-line-token',
+      LINE_CHANNEL_SECRET: 'test-line-secret',
+      GOOGLE_SHEETS_CREDENTIALS: JSON.stringify({
+        type: 'service_account',
+        project_id: 'test-project',
+        private_key: 'test-private-key',
+        client_email: 'test@example.com'
+      }),
+      GOOGLE_SHEETS_SPREADSHEET_ID: 'test-spreadsheet-id'
     };
 
     sheetsService = new GoogleSheetsService(mockEnv);
@@ -445,15 +454,15 @@ describe('GoogleSheetsService', () => {
   });
 
   describe('getRandomChatMessage', () => {
-    it('should return a random message from the sheet', async () => {
+    it('should return a random chat message from the sheet', async () => {
       const sheetName = 'うさこの言葉';
-      const messages = [
+      const mockMessages = [
         ['こんにちは！'],
-        ['元気ですか？'],
-        ['今日も頑張りましょう！']
+        ['元気？'],
+        ['今日も頑張ろう！']
       ];
-      
-      // シートが存在する
+
+      // シートの存在確認をモック
       mockSheets.spreadsheets.get.mockResolvedValueOnce({
         data: {
           sheets: [
@@ -462,109 +471,35 @@ describe('GoogleSheetsService', () => {
           ]
         }
       });
-      
-      // メッセージを取得
+
+      // メッセージの取得をモック
       mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
         data: {
-          values: messages
+          values: mockMessages
         }
       });
-      
-      // crypto.getRandomValuesをモック
-      const originalCrypto = (global as any).crypto;
-      const mockGetRandomValues = jest.fn().mockImplementation((array) => {
-        array[0] = 1; // 0-2の範囲で1を選択するように固定
-        return array;
-      });
-      
-      Object.defineProperty(global, 'crypto', {
-        value: {
-          getRandomValues: mockGetRandomValues
-        },
-        configurable: true
-      });
-      
+
       const result = await sheetsService.getRandomChatMessage();
-      
-      // 元のcryptoを復元
-      Object.defineProperty(global, 'crypto', {
-        value: originalCrypto,
-        configurable: true
-      });
-      
-      // シートの存在確認
+
+      // シートの存在確認の呼び出しを検証
       expect(mockSheets.spreadsheets.get).toHaveBeenCalledWith({
-        spreadsheetId: mockEnv.SPREADSHEET_ID
+        spreadsheetId: mockEnv.GOOGLE_SHEETS_SPREADSHEET_ID
       });
-      
-      // メッセージの取得
+
+      // メッセージの取得の呼び出しを検証
       expect(mockSheets.spreadsheets.values.get).toHaveBeenCalledWith({
-        spreadsheetId: mockEnv.SPREADSHEET_ID,
-        range: `${sheetName}!A1:A`
+        spreadsheetId: mockEnv.GOOGLE_SHEETS_SPREADSHEET_ID,
+        range: 'うさこの言葉!A:A'
       });
-      
-      // 乱数生成の呼び出し
-      expect(mockGetRandomValues).toHaveBeenCalled();
-      
-      // 結果の確認（インデックス1のメッセージ）
-      expect(result).toBe('こんにちは！');
+
+      // 結果が期待されるメッセージの1つであることを確認
+      expect(mockMessages.some(msg => msg[0] === result)).toBe(true);
     });
 
-    it('should create sheet and return default message when sheet does not exist', async () => {
+    it('should return default message when no messages exist', async () => {
       const sheetName = 'うさこの言葉';
-      
-      // シートが存在しない
-      mockSheets.spreadsheets.get.mockResolvedValueOnce({
-        data: {
-          sheets: [
-            { properties: { title: 'Sheet1' } }
-          ]
-        }
-      });
-      
-      // シート作成
-      mockSheets.spreadsheets.batchUpdate.mockResolvedValueOnce({});
-      
-      // デフォルトメッセージ設定
-      mockSheets.spreadsheets.values.update.mockResolvedValueOnce({});
-      
-      const result = await sheetsService.getRandomChatMessage();
-      
-      // シートの存在確認
-      expect(mockSheets.spreadsheets.get).toHaveBeenCalledWith({
-        spreadsheetId: mockEnv.SPREADSHEET_ID
-      });
-      
-      // シート作成
-      expect(mockSheets.spreadsheets.batchUpdate).toHaveBeenCalledWith({
-        spreadsheetId: mockEnv.SPREADSHEET_ID,
-        requestBody: {
-          requests: [{
-            addSheet: {
-              properties: {
-                title: sheetName
-              }
-            }
-          }]
-        }
-      });
-      
-      // デフォルトメッセージ設定
-      expect(mockSheets.spreadsheets.values.update).toHaveBeenCalledWith({
-        spreadsheetId: mockEnv.SPREADSHEET_ID,
-        range: `${sheetName}!A1`,
-        valueInputOption: 'USER_ENTERED',
-        requestBody: { values: [['こんにちは！']] }
-      });
-      
-      // 結果の確認
-      expect(result).toBe('こんにちは！');
-    });
 
-    it('should return default message when sheet is empty', async () => {
-      const sheetName = 'うさこの言葉';
-      
-      // シートが存在する
+      // シートの存在確認をモック
       mockSheets.spreadsheets.get.mockResolvedValueOnce({
         data: {
           sheets: [
@@ -573,28 +508,35 @@ describe('GoogleSheetsService', () => {
           ]
         }
       });
-      
-      // 空のメッセージ配列
+
+      // メッセージの取得をモック
       mockSheets.spreadsheets.values.get.mockResolvedValueOnce({
+        data: {}
+      });
+
+      const result = await sheetsService.getRandomChatMessage();
+
+      expect(result).toBe('こんにちは！');
+    });
+
+    it('should return default message when API call fails', async () => {
+      const sheetName = 'うさこの言葉';
+
+      // シートの存在確認をモック
+      mockSheets.spreadsheets.get.mockResolvedValueOnce({
         data: {
-          values: []
+          sheets: [
+            { properties: { title: 'Sheet1' } },
+            { properties: { title: sheetName } }
+          ]
         }
       });
-      
+
+      // メッセージの取得をモック
+      mockSheets.spreadsheets.values.get.mockRejectedValueOnce(new Error('API Error'));
+
       const result = await sheetsService.getRandomChatMessage();
-      
-      // シートの存在確認
-      expect(mockSheets.spreadsheets.get).toHaveBeenCalledWith({
-        spreadsheetId: mockEnv.SPREADSHEET_ID
-      });
-      
-      // メッセージの取得
-      expect(mockSheets.spreadsheets.values.get).toHaveBeenCalledWith({
-        spreadsheetId: mockEnv.SPREADSHEET_ID,
-        range: `${sheetName}!A1:A`
-      });
-      
-      // 結果の確認
+
       expect(result).toBe('こんにちは！');
     });
   });

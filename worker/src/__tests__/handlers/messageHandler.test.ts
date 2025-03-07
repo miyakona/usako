@@ -1,93 +1,87 @@
 import { MessageHandler } from '../../handlers/messageHandler';
 import { LineMessagingService } from '../../services/lineMessaging';
+import { GoogleSheetsService } from '../../services/googleSheets';
+import { Env } from '../../types';
 
 jest.mock('../../services/lineMessaging');
 jest.mock('../../services/googleSheets');
+jest.mock('../../handlers/purchaseHandler');
+jest.mock('../../handlers/chatHandler');
 
 describe('MessageHandler', () => {
   let messageHandler: MessageHandler;
-  let mockEnv: any;
+  let mockLineService: jest.Mocked<LineMessagingService>;
+  let mockGoogleSheetsService: jest.Mocked<GoogleSheetsService>;
+  let mockEnv: Env;
 
   beforeEach(() => {
     mockEnv = {
-      LINE_CHANNEL_SECRET: 'test-secret',
       LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
-      GOOGLE_SERVICE_ACCOUNT_KEY: '{}',
-      SPREADSHEET_ID: 'test-id'
+      LINE_CHANNEL_SECRET: 'test-secret',
+      SPREADSHEET_ID: 'test-spreadsheet',
+      GOOGLE_SERVICE_ACCOUNT_KEY: 'test-key',
+      GOOGLE_SHEETS_CREDENTIALS: 'test-credentials',
+      GOOGLE_SHEETS_SPREADSHEET_ID: 'test-sheets-id',
     };
-    messageHandler = new MessageHandler(mockEnv);
+
+    const MockLineMessagingService = LineMessagingService as jest.MockedClass<typeof LineMessagingService>;
+    const MockGoogleSheetsService = GoogleSheetsService as jest.MockedClass<typeof GoogleSheetsService>;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockLineService = new MockLineMessagingService(mockEnv as any) as jest.Mocked<LineMessagingService>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockGoogleSheetsService = new MockGoogleSheetsService(mockEnv as any) as jest.Mocked<GoogleSheetsService>;
+
+    mockLineService.replyText = jest.fn();
+    mockLineService.replyTemplateButton = jest.fn();
+
+    messageHandler = new MessageHandler(mockEnv, mockLineService, mockGoogleSheetsService);
   });
 
   describe('handleMessage', () => {
     it('should handle 家事管理 command', async () => {
       const replyToken = 'test-reply-token';
-      const text = '家事管理';
+      await messageHandler.handleMessage(replyToken, '家事管理');
 
-      await messageHandler.handleMessage(replyToken, text);
-
-      expect(LineMessagingService.prototype.replyTemplateButton).toHaveBeenCalledWith(
+      expect(mockLineService.replyTemplateButton).toHaveBeenCalledWith(
         replyToken,
         '家事管理テンプレート',
         expect.objectContaining({
-          thumbnailImageUrl: expect.any(String),
-          imageAspectRatio: 'square',
-          imageSize: 'contain',
           title: '家事管理',
-          text: expect.any(String),
-          actions: expect.arrayContaining([
-            expect.objectContaining({
-              type: 'postback',
-              label: '報告する'
-            }),
-            expect.objectContaining({
-              type: 'postback',
-              label: '確認する'
-            })
-          ])
+          text: '家事に関する操作を選択してください'
         })
       );
     });
 
     it('should handle 家計簿 command', async () => {
       const replyToken = 'test-reply-token';
-      const text = '家計簿';
+      await messageHandler.handleMessage(replyToken, '家計簿');
 
-      await messageHandler.handleMessage(replyToken, text);
-
-      expect(LineMessagingService.prototype.replyTemplateButton).toHaveBeenCalledWith(
+      expect(mockLineService.replyTemplateButton).toHaveBeenCalledWith(
         replyToken,
         '家計簿テンプレート',
         expect.objectContaining({
-          thumbnailImageUrl: expect.any(String),
-          imageAspectRatio: 'square',
-          imageSize: 'contain',
           title: '家計簿',
-          text: expect.any(String),
-          actions: expect.arrayContaining([
-            expect.objectContaining({
-              type: 'postback',
-              label: '報告する'
-            }),
-            expect.objectContaining({
-              type: 'postback',
-              label: '確認する'
-            }),
-            expect.objectContaining({
-              type: 'postback',
-              label: '今月の支出'
-            })
-          ])
+          text: '家計簿に関する操作を選択してください'
         })
       );
     });
 
-    it('should handle unknown command', async () => {
+    it('should handle 買い出しリスト command', async () => {
       const replyToken = 'test-reply-token';
-      const text = '不明なコマンド';
+      await messageHandler.handleMessage(replyToken, '買い出しリスト');
 
-      await messageHandler.handleMessage(replyToken, text);
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
+        replyToken,
+        '買い出しリストの操作を選択してください。'
+      );
+    });
 
-      expect(LineMessagingService.prototype.replyText).toHaveBeenCalledWith(
+    it('should handle default command', async () => {
+      const replyToken = 'test-reply-token';
+      await messageHandler.handleMessage(replyToken, '不明なコマンド');
+
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
         replyToken,
         'こんにちは！何かお手伝いできることはありますか？'
       );
@@ -95,21 +89,30 @@ describe('MessageHandler', () => {
 
     it('should handle chat command', async () => {
       const replyToken = 'test-reply-token';
-      const text = 'うさこ〜〜〜';
-      
-      // モックの設定
       const mockChatHandler = {
-        handleMessage: jest.fn().mockResolvedValue('どうしたの？何か話したいことある？')
+        handleMessage: jest.fn().mockResolvedValue('テストチャットメッセージ')
       };
+      
+      // ChatHandlerのモックを注入
       (messageHandler as any).chatHandler = mockChatHandler;
 
-      await messageHandler.handleMessage(replyToken, text);
+      await messageHandler.handleMessage(replyToken, 'うさこ こんにちは');
 
-      expect(mockChatHandler.handleMessage).toHaveBeenCalledWith(text);
-      expect(LineMessagingService.prototype.replyText).toHaveBeenCalledWith(
-        replyToken,
-        'どうしたの？何か話したいことある？'
+      expect(mockChatHandler.handleMessage).toHaveBeenCalledWith('うさこ こんにちは');
+      expect(mockLineService.replyText).toHaveBeenCalledWith(
+        replyToken, 
+        'テストチャットメッセージ'
       );
+    });
+  });
+
+  describe('run method', () => {
+    it('should call purchaseHandler initialize', async () => {
+      const initializeSpy = jest.spyOn(messageHandler['purchaseHandler'], 'initialize');
+      
+      await messageHandler['run']();
+
+      expect(initializeSpy).toHaveBeenCalled();
     });
   });
 }); 

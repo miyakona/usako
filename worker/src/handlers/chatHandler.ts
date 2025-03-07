@@ -6,9 +6,9 @@ export class ChatHandler {
   private readonly lineService: LineMessagingService;
   private readonly imgUrl: string = 'https://example.com/chat.jpg'; // 実際の画像URLに置き換える
 
-  constructor(sheetsService: GoogleSheetsService, lineService: LineMessagingService) {
-    this.sheetsService = sheetsService;
+  constructor(lineService: LineMessagingService, sheetsService: GoogleSheetsService) {
     this.lineService = lineService;
+    this.sheetsService = sheetsService;
   }
 
   /**

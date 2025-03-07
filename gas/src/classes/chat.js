@@ -34,7 +34,7 @@ class Chat { // eslint-disable-line no-unused-vars
     
     // より安全な乱数生成方法を使用
     // Utilities.getUuid()を使用して暗号学的に安全な乱数を生成
-    const uuid = Utilities.getUuid();
+    const uuid = Utilities.getUuid();  // eslint-disable-line no-undef
     // UUIDの最初の8文字を16進数として解釈し、0-1の範囲に正規化
     const randomValue = parseInt(uuid.substring(0, 8), 16) / 0xffffffff;
     

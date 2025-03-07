@@ -1,19 +1,15 @@
 module.exports = {
+  preset: 'ts-jest',
   testEnvironment: 'node',
-  moduleNameMapper: {
-    '^google-apps-script$': '<rootDir>/__mocks__/google-apps-script.js',
-  },
-  setupFiles: ['<rootDir>/jest.setup.js'],
   transform: {
-    '^.+\\.(ts|tsx)$': 'ts-jest',
-    '^.+\\.(js|jsx)$': 'babel-jest',
+    '^.+\\.tsx?$': 'ts-jest'
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
-  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/worker/src/__tests__/'],
-  collectCoverageFrom: [
-    'gas/src/**/*.js',
-    '!gas/src/test/**',
-    '!**/node_modules/**',
-    '!**/dist/**'
-  ],
+  testMatch: ['**/__tests__/**/*.test.ts'],
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov'],
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true
 }; 

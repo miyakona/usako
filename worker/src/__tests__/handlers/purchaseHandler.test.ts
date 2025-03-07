@@ -14,13 +14,22 @@ describe('PurchaseHandler', () => {
   beforeEach(() => {
     // 環境変数のモック
     const mockEnv: Env = {
-      SPREADSHEET_ID: 'mock-spreadsheet-id',
+      SPREADSHEET_ID: 'test-spreadsheet-id',
       GOOGLE_SERVICE_ACCOUNT_KEY: JSON.stringify({
-        client_email: 'mock-email@example.com',
-        private_key: 'mock-private-key'
+        type: 'service_account',
+        project_id: 'test-project',
+        private_key: 'test-private-key',
+        client_email: 'test@example.com'
       }),
-      LINE_CHANNEL_ACCESS_TOKEN: 'mock-token',
-      LINE_CHANNEL_SECRET: 'mock-secret'
+      LINE_CHANNEL_ACCESS_TOKEN: 'test-line-token',
+      LINE_CHANNEL_SECRET: 'test-line-secret',
+      GOOGLE_SHEETS_CREDENTIALS: JSON.stringify({
+        type: 'service_account',
+        project_id: 'test-project',
+        private_key: 'test-private-key',
+        client_email: 'test@example.com'
+      }),
+      GOOGLE_SHEETS_SPREADSHEET_ID: 'test-sheets-spreadsheet-id'
     };
 
     mockSheetsService = new GoogleSheetsService(mockEnv) as jest.Mocked<GoogleSheetsService>;

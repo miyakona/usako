@@ -8,10 +8,11 @@
     "worker"
   ],
   "scripts": {
-    "test": "npm run test:gas && npm run test:worker",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "test:gas": "cd gas && npm test",
     "test:worker": "cd worker && npm test",
-    "test:coverage": "npm run test:coverage:gas && npm run test:coverage:worker",
     "test:coverage:gas": "cd gas && npm run test:coverage",
     "test:coverage:worker": "cd worker && npm run test:coverage",
     "lint": "npm run lint:gas && npm run lint:worker",
@@ -21,7 +22,6 @@
     "lint:fix:gas": "cd gas && npm run lint:fix",
     "lint:fix:worker": "cd worker && npm run lint:fix",
     "check": "npm run lint && npm test",
-    "precommit": "npm run check",
     "prepare": "husky",
     "apply-cursor-settings": "./scripts/apply-cursor-settings.sh"
   },
@@ -37,6 +37,9 @@
   },
   "homepage": "https://github.com/miyakona/usako#readme",
   "devDependencies": {
-    "husky": "^9.1.7"
+    "@types/jest": "^29.5.14",
+    "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.6"
   }
 }

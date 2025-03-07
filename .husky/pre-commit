@@ -2,7 +2,7 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 echo "Running tests before commit..."
-cd worker && npm test
+npm run check
 
 # テストが失敗した場合はコミットを中止
 if [ $? -ne 0 ]; then

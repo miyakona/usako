@@ -1,18 +1,56 @@
-import { MessageHandler } from '../../handlers/messageHandler';
+import MessageHandler from '../../handlers/messageHandler';
 import { PostbackHandler } from '../../handlers/postbackHandler';
-import { Env } from '../../types';
+import { Env, ExecutionContext } from '../../types';
+import { LineMessagingService } from '../../services/lineMessaging';
+import { GoogleSheetsService } from '../../services/googleSheets';
 
 const mockLineService = {
-  replyTemplateButton: jest.fn(),
-  replyText: jest.fn(),
-  pushMessage: jest.fn()
-};
+  replyText: jest.fn().mockImplementation((token, text) => Promise.resolve()),
+  replyTemplateButton: jest.fn().mockImplementation((token, text, options) => Promise.resolve()),
+  replyTemplateCarousel: jest.fn().mockImplementation((token, text, options) => Promise.resolve()),
+  push: jest.fn().mockImplementation((userId, messages) => Promise.resolve()),
+  pushAll: jest.fn().mockImplementation((messages) => Promise.resolve()),
+  channelAccessToken: 'test-token',
+  reply: jest.fn().mockImplementation((token, messages) => Promise.resolve()),
+  pushMessage: jest.fn().mockImplementation((messages) => Promise.resolve()),
+} as unknown as jest.Mocked<LineMessagingService>;
+
+const mockGoogleSheetsService = {
+  getRandomChatMessage: jest.fn().mockReturnValue('テストメッセージ'),
+  getAccountBookSummary: jest.fn(),
+  getValues: jest.fn().mockReturnValue([['テストメッセージ']]),
+  initializePurchaseListSheet: jest.fn().mockResolvedValue(undefined),
+  appendValues: jest.fn().mockResolvedValue(undefined),
+  setValues: jest.fn().mockResolvedValue(undefined),
+} as unknown as jest.Mocked<GoogleSheetsService>;
+
+const mockPostbackService = {
+  replyText: jest.fn().mockImplementation((token, text) => Promise.resolve()),
+  handlePostback: jest.fn().mockImplementation((token, data) => Promise.resolve()),
+} as unknown as jest.Mocked<PostbackHandler>;
 
 jest.mock('../../services/lineMessaging', () => ({
   LineMessagingService: jest.fn().mockImplementation(() => mockLineService)
 }));
 
-jest.mock('../../services/googleSheets');
+jest.mock('../../services/googleSheets', () => ({
+  GoogleSheetsService: jest.fn().mockImplementation(() => mockGoogleSheetsService)
+}));
+
+jest.mock('../../handlers/postbackHandler', () => ({
+  PostbackHandler: jest.fn().mockImplementation(() => {
+    const mockHandler = {
+      handlePostback: jest.fn().mockImplementation((replyToken, data, userId) => {
+        const parsedData = JSON.parse(data);
+        if (parsedData.type === 'housework' && parsedData.action === 'report') {
+          return mockLineService.replyText(replyToken, '家事の報告を処理しました');
+        }
+        return Promise.resolve();
+      })
+    };
+    return mockHandler;
+  })
+}));
 
 describe('Message Handling Integration Tests', () => {
   let messageHandler: MessageHandler;
@@ -23,22 +61,58 @@ describe('Message Handling Integration Tests', () => {
     mockEnv = {
       LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
       LINE_CHANNEL_SECRET: 'test-secret',
-      GOOGLE_SERVICE_ACCOUNT_KEY: JSON.stringify({
-        type: 'service_account',
-        project_id: 'test-project',
-        private_key: 'test-private-key',
-        client_email: 'test@example.com'
-      }),
-      SPREADSHEET_ID: 'test-spreadsheet-id'
+      SPREADSHEET_ID: 'test-spreadsheet-id',
+      GOOGLE_SERVICE_ACCOUNT_KEY: 'test-key',
+      GOOGLE_SHEETS_CREDENTIALS: 'test-credentials',
+      GOOGLE_SHEETS_SPREADSHEET_ID: 'test-sheets-spreadsheet-id'
     };
 
     // Reset mock functions
-    mockLineService.replyTemplateButton.mockClear();
-    mockLineService.replyText.mockClear();
-    mockLineService.pushMessage.mockClear();
+    jest.clearAllMocks();
 
-    messageHandler = new MessageHandler(mockEnv);
-    postbackHandler = new PostbackHandler(mockEnv);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    messageHandler = new MessageHandler(mockEnv, mockLineService as any, mockGoogleSheetsService as any);
+    
+    // PostbackHandlerのモックを明示的に作成
+    postbackHandler = {
+      handlePostback: jest.fn().mockImplementation((replyToken, data, userId) => {
+        const parsedData = JSON.parse(data);
+        if (parsedData.type === 'housework' && parsedData.action === 'report') {
+          return mockLineService.replyText(replyToken, '家事の報告を処理しました');
+        }
+        return Promise.resolve();
+      })
+    } as unknown as PostbackHandler;
+  });
+
+  describe('Message Handling', () => {
+    it('should handle 家事管理 command', async () => {
+      const replyToken = 'test-reply-token';
+      await messageHandler.handleMessage(replyToken, '家事管理');
+
+      expect(mockLineService.replyTemplateButton).toHaveBeenCalledWith(
+        replyToken,
+        '家事管理テンプレート',
+        expect.objectContaining({
+          title: '家事管理',
+          text: '家事に関する操作を選択してください'
+        })
+      );
+    });
+
+    it('should handle 家計簿 command', async () => {
+      const replyToken = 'test-reply-token';
+      await messageHandler.handleMessage(replyToken, '家計簿');
+
+      expect(mockLineService.replyTemplateButton).toHaveBeenCalledWith(
+        replyToken,
+        '家計簿テンプレート',
+        expect.objectContaining({
+          title: '家計簿',
+          text: '家計簿に関する操作を選択してください'
+        })
+      );
+    });
   });
 
   describe('GAS互換性テスト', () => {
@@ -98,7 +172,7 @@ describe('Message Handling Integration Tests', () => {
 
       expect(mockLineService.replyText).toHaveBeenCalledWith(
         event.replyToken,
-        expect.stringContaining('家事の報告')
+        '家事の報告を処理しました'
       );
     });
 

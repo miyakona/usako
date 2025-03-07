@@ -40,8 +40,8 @@ export class LineMessagingService {
       template: {
         type: 'buttons',
         thumbnailImageUrl: options.thumbnailImageUrl,
-        imageAspectRatio: options.imageAspectRatio ?? 'rectangle',
-        imageSize: options.imageSize ?? 'cover',
+        imageAspectRatio: options.imageAspectRatio,
+        imageSize: options.imageSize,
         title: options.title,
         text: options.text,
         actions: options.actions

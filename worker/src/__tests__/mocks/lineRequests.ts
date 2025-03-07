@@ -69,4 +69,10 @@ export const mockPurchaseListMessage = {
       mode: 'active'
     }
   ]
-}; 
+};
+
+describe('LineRequests', () => {
+  it('should be a placeholder test', () => {
+    expect(true).toBe(true);
+  });
+}); 

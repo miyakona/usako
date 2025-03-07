@@ -13,8 +13,10 @@ describe('LineMessagingService', () => {
     mockEnv = {
       LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
       LINE_CHANNEL_SECRET: 'test-secret',
-      GOOGLE_SERVICE_ACCOUNT_KEY: '{}',
-      SPREADSHEET_ID: 'test-id'
+      GOOGLE_SERVICE_ACCOUNT_KEY: 'test-key',
+      SPREADSHEET_ID: 'test-spreadsheet-id',
+      GOOGLE_SHEETS_CREDENTIALS: 'test-credentials',
+      GOOGLE_SHEETS_SPREADSHEET_ID: 'test-sheets-spreadsheet-id'
     };
 
     lineService = new LineMessagingService(mockEnv);

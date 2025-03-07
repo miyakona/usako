@@ -1,7 +1,7 @@
-import { Env, LineWebhookRequest } from '../types';
-import workerHandler from '../index';
-import { MessageHandler } from '../handlers/messageHandler';
+import { Env, LineEvent, LineWebhookRequest, ExecutionContext } from '../types';
+import MessageHandler from '../handlers/messageHandler';
 import { PostbackHandler } from '../handlers/postbackHandler';
+import workerHandler from '../index';
 
 // モックの設定
 jest.mock('../handlers/messageHandler');
@@ -23,9 +23,12 @@ Object.defineProperty(global, 'crypto', {
 
 describe('Worker Handler', () => {
   let mockEnv: Env;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let mockRequest: Request;
   let mockExecutionContext: ExecutionContext;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let messageHandlerInstance: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let postbackHandlerInstance: any;
 
   beforeEach(() => {
@@ -36,20 +39,18 @@ describe('Worker Handler', () => {
     mockEnv = {
       LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
       LINE_CHANNEL_SECRET: 'test-secret',
-      GOOGLE_SERVICE_ACCOUNT_KEY: JSON.stringify({
-        type: 'service_account',
-        project_id: 'test-project',
-        private_key: 'test-private-key',
-        client_email: 'test@example.com'
-      }),
-      SPREADSHEET_ID: 'test-spreadsheet-id'
+      SPREADSHEET_ID: 'test-spreadsheet-id',
+      GOOGLE_SERVICE_ACCOUNT_KEY: 'test-key',
+      GOOGLE_SHEETS_CREDENTIALS: 'test-credentials',
+      GOOGLE_SHEETS_SPREADSHEET_ID: 'test-sheets-spreadsheet-id'
     };
 
     // ExecutionContextのモック
     mockExecutionContext = {
+      env: mockEnv,
       waitUntil: jest.fn(),
       passThroughOnException: jest.fn()
-    } as unknown as ExecutionContext;
+    } as ExecutionContext;
 
     // crypto.subtleのモックの設定
     mockImportKey.mockResolvedValue('mockCryptoKey');
@@ -62,12 +63,37 @@ describe('Worker Handler', () => {
     postbackHandlerInstance = {
       handlePostback: jest.fn().mockResolvedValue(undefined)
     };
-    (MessageHandler as jest.Mock).mockImplementation(() => messageHandlerInstance);
+    (MessageHandler as jest.Mock).mockImplementation((env, lineService) => messageHandlerInstance);
     (PostbackHandler as jest.Mock).mockImplementation(() => postbackHandlerInstance);
+
+    // モックリクエストの作成
+    mockRequest = new Request('https://example.com', {
+      method: 'POST',
+      headers: {
+        'X-Line-Signature': '1234'
+      },
+      body: JSON.stringify({
+        events: [
+          {
+            type: 'message',
+            message: {
+              type: 'text',
+              text: 'こんにちは'
+            },
+            replyToken: 'test-reply-token',
+            source: {
+              type: 'user',
+              userId: 'test-user-id'
+            }
+          }
+        ]
+      })
+    });
   });
 
   test('OPTIONSリクエストに対してCORSヘッダーを返す', async () => {
     // OPTIONSリクエストの作成
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mockRequest = new Request('https://example.com', {
       method: 'OPTIONS'
     });
@@ -82,6 +108,7 @@ describe('Worker Handler', () => {
 
   test('POSTリクエスト以外は404を返す', async () => {
     // GETリクエストの作成
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mockRequest = new Request('https://example.com', {
       method: 'GET'
     });
@@ -93,6 +120,7 @@ describe('Worker Handler', () => {
 
   test('署名がない場合は401を返す', async () => {
     // 署名のないPOSTリクエストの作成
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     mockRequest = new Request('https://example.com', {
       method: 'POST',
       body: JSON.stringify({ events: [] })
@@ -106,44 +134,6 @@ describe('Worker Handler', () => {
   });
 
   test('有効なPOSTリクエストを処理する', async () => {
-    // テスト用のWebhookリクエスト
-    const webhookRequest: LineWebhookRequest = {
-      events: [
-        {
-          type: 'message',
-          message: {
-            type: 'text',
-            text: 'こんにちは'
-          },
-          replyToken: 'test-reply-token',
-          source: {
-            type: 'user',
-            userId: 'test-user-id'
-          }
-        }
-      ]
-    };
-
-    // 有効な署名付きPOSTリクエストの作成
-    mockRequest = new Request('https://example.com', {
-      method: 'POST',
-      headers: {
-        'X-Line-Signature': '1234'
-      },
-      body: JSON.stringify(webhookRequest)
-    });
-
-    // ReadableStreamのモック
-    const mockReadable = new ReadableStream({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode(JSON.stringify(webhookRequest)));
-        controller.close();
-      }
-    });
-
-    // text()メソッドのモック
-    mockRequest.text = jest.fn().mockResolvedValue(JSON.stringify(webhookRequest));
-    
     const response = await workerHandler.fetch(mockRequest, mockEnv, mockExecutionContext);
     
     expect(response.status).toBe(200);
@@ -159,5 +149,74 @@ describe('Worker Handler', () => {
       'こんにちは',
       'test-user-id'
     );
+  });
+
+  describe('workerHandler', () => {
+    it('should handle message events', async () => {
+      // メッセージイベントのテストケースを修正
+      const mockLineEvent: any = {
+        type: 'message',
+        replyToken: 'test-reply-token',
+        message: {
+          type: 'text',
+          text: 'テストメッセージ'
+        },
+        source: {
+          type: 'user',
+          userId: 'test-user-id'
+        }
+      };
+
+      const mockRequest = new Request('https://example.com', {
+        method: 'POST',
+        headers: {
+          'X-Line-Signature': '1234'
+        },
+        body: JSON.stringify({
+          events: [mockLineEvent]
+        })
+      });
+
+      const response = await workerHandler.fetch(mockRequest, mockEnv, mockExecutionContext);
+
+      expect(messageHandlerInstance.handleMessage).toHaveBeenCalledWith(
+        mockLineEvent.replyToken,
+        mockLineEvent.message.text,
+        mockLineEvent.source.userId
+      );
+    });
+
+    it('should handle postback events', async () => {
+      // ポストバックイベントのテストケースを修正
+      const mockPostbackEvent: any = {
+        type: 'postback',
+        replyToken: 'test-reply-token',
+        postback: {
+          data: 'テストポストバック'
+        },
+        source: {
+          type: 'user',
+          userId: 'test-user-id'
+        }
+      };
+
+      const mockPostbackRequest = new Request('https://example.com', {
+        method: 'POST',
+        headers: {
+          'X-Line-Signature': '1234'
+        },
+        body: JSON.stringify({
+          events: [mockPostbackEvent]
+        })
+      });
+
+      const postbackResponse = await workerHandler.fetch(mockPostbackRequest, mockEnv, mockExecutionContext);
+
+      expect(postbackHandlerInstance.handlePostback).toHaveBeenCalledWith(
+        mockPostbackEvent.replyToken,
+        mockPostbackEvent.postback.data,
+        mockPostbackEvent.source.userId
+      );
+    });
   });
 }); 
