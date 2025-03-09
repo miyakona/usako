@@ -31,12 +31,6 @@ export class ChatHandler {
    * メッセージを処理する
    */
   async handleMessage(message: string): Promise<string> {
-    // 特定のキーワードがあれば、それに対応するメッセージを返す
-    if (message.includes('うさこ〜〜〜')) {
-      return 'どうしたの？何か話したいことある？';
-    }
-    
-    // それ以外はランダムなメッセージを返す
     return await this.sheetsService.getRandomChatMessage();
   }
 } 

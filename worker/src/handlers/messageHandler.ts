@@ -43,6 +43,7 @@ export class MessageHandler extends CommandBaseHandler {
       // コマンドを解析
       const command = this.parseCommand(message);
 
+      console.log('command', command);
       // コマンドに応じた処理
       switch (command) {
         case '家事管理':
@@ -67,6 +68,7 @@ export class MessageHandler extends CommandBaseHandler {
             const response = await this.chatHandler.handleMessage(message);
             await this.lineService.replyText(replyToken, response);
           } else {
+            console.log('デフォルトメッセージを処理');
             await this.handleDefaultMessage(replyToken);
           }
       }

@@ -9,6 +9,7 @@ export class PostbackHandler {
   private readonly purchaseHandler: PurchaseHandler;
 
   constructor(env: Env) {
+    console.log('constructor postbackHandler');
     this.lineService = new LineMessagingService(env);
     this.sheetsService = new GoogleSheetsService(env);
     this.purchaseHandler = new PurchaseHandler(this.sheetsService, this.lineService);
@@ -85,11 +86,10 @@ export class PostbackHandler {
     let month = dt.getMonth() + 1;
 
     if (dt.getDate() >= 26) {
-      if (month === 12) {
+      month += 1;
+      if (month > 12) {
         year += 1;
         month = 1;
-      } else {
-        month += 1;
       }
     }
 

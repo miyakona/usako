@@ -58,4 +58,23 @@ export interface LineAction {
 export interface LineColumn {
   title: string;
   text: string;
+}
+
+// トークンレスポンスの型定義
+export interface TokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
+export interface Message {
+  title: string;
+  text: string;
+}
+
+export interface TokenValidationResponse {
+  audience?: string;
+  scope?: string;
+  expires_in?: number;
+  error?: string;
 } 

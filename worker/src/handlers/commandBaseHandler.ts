@@ -1,17 +1,25 @@
-import { Env } from '../types';
 import { LineMessagingService } from '../services/lineMessaging';
+import { GoogleSheetsService } from '../services/googleSheets';
+import { Env as EnvType } from '../types';
 
 export abstract class CommandBaseHandler {
   protected readonly name: string;
   protected readonly lineMessaging: LineMessagingService;
-  protected readonly env: Env;
+  protected readonly env: EnvType;
   protected readonly lineService: LineMessagingService;
+  protected readonly googleSheets: GoogleSheetsService;
 
-  constructor(env: Env, lineService?: LineMessagingService) {
+  constructor(
+    env: EnvType, 
+    lineService?: LineMessagingService, 
+    googleSheets?: GoogleSheetsService
+  ) {
     this.env = env;
     this.lineService = lineService || new LineMessagingService(env);
-    this.lineMessaging = this.lineService; // エイリアスを追加
-    this.name = this.constructor.name; // クラス名を使用
+    this.lineMessaging = this.lineService;
+    this.name = this.constructor.name;
+    
+    this.googleSheets = googleSheets || new GoogleSheetsService(env);
   }
 
   /**
@@ -100,10 +108,18 @@ export abstract class CommandBaseHandler {
    * @param replyToken 返信トークン
    */
   protected async handleDefaultMessage(replyToken: string): Promise<void> {
-    await this.lineService.replyText(
-      replyToken, 
-      'こんにちは！何かお手伝いできることはありますか？'
-    );
+    console.log('デフォルトメッセージを処理(handleDefaultMessage)');
+    try {
+      const randomMessage = await this.googleSheets.getRandomChatMessage();
+      await this.lineService.replyText(replyToken, randomMessage);
+    } catch (error) {
+      console.error('Failed to get random chat message:', error);
+      // エラー時のフォールバックメッセージ
+      await this.lineService.replyText(
+        replyToken, 
+        error instanceof Error ? error.message : 'こんにちは！何かお手伝いできることはありますか？'
+      );
+    }
   }
 
   /**
@@ -170,4 +186,11 @@ ${commands.map(cmd => `- ${cmd}`).join('\n')}
 
 各コマンドの詳細なヘルプが必要な場合は、「ヘルプ ${commands[0]}」のように入力してください。`;
   }
+}
+
+export interface Env {
+  SPREADSHEET_ID: string;
+  GOOGLE_SHEETS_SPREADSHEET_ID: string;
+  GOOGLE_API_KEY: string;
+  // 他の既存の環境変数
 } 

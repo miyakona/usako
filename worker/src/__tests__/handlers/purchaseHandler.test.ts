@@ -1,49 +1,56 @@
 import { PurchaseHandler } from '../../handlers/purchaseHandler';
-import { GoogleSheetsService } from '../../services/googleSheets';
-import { LineMessagingService } from '../../services/lineMessaging';
 import { Env } from '../../types';
-
-jest.mock('../../services/googleSheets');
-jest.mock('../../services/lineMessaging');
+import { LineMessagingService } from '../../services/lineMessaging';
+import { GoogleSheetsService } from '../../services/googleSheets';
 
 describe('PurchaseHandler', () => {
   let purchaseHandler: PurchaseHandler;
-  let mockSheetsService: jest.Mocked<GoogleSheetsService>;
   let mockLineService: jest.Mocked<LineMessagingService>;
+  let mockSheetsService: jest.Mocked<GoogleSheetsService>;
+  let mockEnv: Env;
 
   beforeEach(() => {
-    // 環境変数のモック
-    const mockEnv: Env = {
-      SPREADSHEET_ID: 'test-spreadsheet-id',
-      GOOGLE_SERVICE_ACCOUNT_KEY: JSON.stringify({
-        type: 'service_account',
-        project_id: 'test-project',
-        private_key: 'test-private-key',
-        client_email: 'test@example.com'
-      }),
-      LINE_CHANNEL_ACCESS_TOKEN: 'test-line-token',
-      LINE_CHANNEL_SECRET: 'test-line-secret',
-      GOOGLE_SHEETS_CREDENTIALS: JSON.stringify({
-        type: 'service_account',
-        project_id: 'test-project',
-        private_key: 'test-private-key',
-        client_email: 'test@example.com'
-      }),
-      GOOGLE_SHEETS_SPREADSHEET_ID: 'test-sheets-spreadsheet-id'
+    mockEnv = {
+      LINE_CHANNEL_ACCESS_TOKEN: 'test-token',
+      LINE_CHANNEL_SECRET: 'test-secret',
+      GOOGLE_SHEETS_SPREADSHEET_ID: 'test-spreadsheet',
+      GOOGLE_SERVICE_ACCOUNT_KEY: 'test-key',
+      SPREADSHEET_ID: 'test-id',
+      GOOGLE_SHEETS_CREDENTIALS: 'test-credentials'
     };
 
-    mockSheetsService = new GoogleSheetsService(mockEnv) as jest.Mocked<GoogleSheetsService>;
-    mockLineService = new LineMessagingService(mockEnv) as jest.Mocked<LineMessagingService>;
-    
-    // シートの初期化メソッドをモック
-    mockSheetsService.initializePurchaseListSheet = jest.fn().mockResolvedValue(undefined);
-    
+    mockLineService = {
+      replyText: jest.fn().mockResolvedValue(undefined),
+      pushAll: jest.fn().mockResolvedValue(undefined)
+    } as any;
+
+    mockSheetsService = {
+      getValues: jest.fn().mockResolvedValue([]),
+      setValues: jest.fn().mockResolvedValue(undefined),
+      addChatMessage: jest.fn().mockResolvedValue(undefined),
+      getRandomChatMessage: jest.fn().mockResolvedValue('テストメッセージ')
+    } as any;
+
     purchaseHandler = new PurchaseHandler(mockSheetsService, mockLineService);
-    // 初期化メソッドを呼び出し
-    purchaseHandler.initialize();
   });
 
   describe('handleMessage', () => {
+    it('should handle purchase list message', async () => {
+      const message = `買い出し
+オレンジ
+いちご
+欲しい`;
+
+      const result = await purchaseHandler.handleMessage(message);
+
+      expect(result).toContain('買い出しリストに追加しておいたよ！');
+      expect(mockSheetsService.setValues).toHaveBeenCalledWith(
+        '買い出しリスト', 
+        'A2:B', 
+        [['オレンジ', ''], ['いちご', '']]
+      );
+    });
+
     it('フォーマットエラーの場合はエラーメッセージを返すこと', async () => {
       const result = await purchaseHandler.handleMessage('買い出し');
       
@@ -103,11 +110,13 @@ describe('PurchaseHandler', () => {
     });
 
     it('欲しいコマンドの場合はaddを呼び出すこと', async () => {
-      mockSheetsService.appendValues = jest.fn().mockResolvedValue(undefined);
-      
       const result = await purchaseHandler.handleMessage('買い出し\nオレンジ\nいちご\n欲しい');
       
-      expect(mockSheetsService.appendValues).toHaveBeenCalledWith('買い出しリスト', [['オレンジ', ''], ['いちご', '']]);
+      expect(mockSheetsService.setValues).toHaveBeenCalledWith(
+        '買い出しリスト', 
+        'A2:B', 
+        [['オレンジ', ''], ['いちご', '']]
+      );
       expect(result).toContain('買い出しリストに追加しておいたよ！');
     });
 
@@ -154,6 +163,20 @@ describe('PurchaseHandler', () => {
       expect(result.actions[0]).toHaveProperty('type', 'message');
       expect(result.actions[0]).toHaveProperty('label', 'リストを見てみる');
       expect(result.actions[0]).toHaveProperty('text', '買い物リスト');
+    });
+  });
+
+  describe('handlePurchaseList', () => {
+    it('should add items to purchase list', async () => {
+      const message = '買い出しリスト オレンジ いちご';
+
+      const result = await purchaseHandler.handleMessage(message);
+
+      expect(mockSheetsService.setValues).toHaveBeenCalledWith(
+        '買い出しリスト', 
+        'A2:B', 
+        [['オレンジ', ''], ['いちご', '']]
+      );
     });
   });
 }); 

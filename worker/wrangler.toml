@@ -6,12 +6,19 @@ compatibility_flags = ["nodejs_compat"]
 [build]
 command = "npm run build"
 
-# 環境変数は.dev.varsファイルで管理します
 [vars]
 # スプレッドシートIDは環境変数として管理します
 # SPREADSHEET_ID = "your-spreadsheet-id"
 
-# シークレットは以下のコマンドで設定します：
-# wrangler secret put LINE_CHANNEL_SECRET
-# wrangler secret put LINE_CHANNEL_ACCESS_TOKEN
-# wrangler secret put GOOGLE_SERVICE_ACCOUNT_KEY 
+[dev]
+port = 8787
+
+[env.production]
+workers_dev = false
+
+[observability]
+enabled = true
+head_sampling_rate = 1 # optional. default = 1.
+
+[observability.logs]
+invocation_logs = true 

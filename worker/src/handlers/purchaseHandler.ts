@@ -34,18 +34,14 @@ yyy
    * クラスのインスタンス化後に呼び出す必要がある
    */
   async initialize(): Promise<void> {
-    try {
-      await this.initializeSheet();
-    } catch (error) {
-      console.error('Failed to initialize purchase list sheet:', error);
-    }
+    // 初期化処理を削除
   }
 
   /**
    * 買い物リストのシートを初期化する
    */
   private async initializeSheet(): Promise<void> {
-    await this.sheet.initializePurchaseListSheet();
+    // メソッドを削除
   }
 
   /**
@@ -166,7 +162,7 @@ ${this.commandSampleAdd}
     }
 
     const values = items.map(item => [item, '']);
-    await this.sheet.appendValues('買い出しリスト', values);
+    await this.sheet.setValues('買い出しリスト', 'A2:B', values);
 
     return `買い出しリストに追加しておいたよ！\nリストの内容を見るには\n\n${this.commandSampleList}\n\nで教えてね`;
   }
