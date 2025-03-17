@@ -1,0 +1,22 @@
+name = "line-bot-cloudflare-worker"
+main = "src/index.ts"
+compatibility_date = "2023-12-01"
+
+[vars]
+ENVIRONMENT = "development"
+
+[[d1_databases]]
+binding = "LOCAL_DB"
+database_name = "your-local-db"
+database_id = "your-local-db-id"
+migrations_dir = "db/migrations"
+
+[[d1_databases]]
+binding = "PROD_DB"
+database_name = "your-prod-db"
+database_id = "your-prod-db-id"
+migrations_dir = "db/migrations"
+
+[env.production]
+[env.production.vars]
+ENVIRONMENT = "production" 

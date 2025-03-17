@@ -1,0 +1,28 @@
+{
+  "name": "line-bot-cloudflare-worker",
+  "version": "1.0.0",
+  "description": "LINE Bot migrated to Cloudflare Worker + D1",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev src/index.ts",
+    "build": "esbuild src/index.ts --bundle --platform=browser --target=es2020 --format=esm --outfile=dist/index.js",
+    "deploy": "wrangler deploy dist/index.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["line-bot", "cloudflare", "workers", "typescript"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231121.0",
+    "@types/node": "^20.10.5",
+    "esbuild": "^0.19.5",
+    "typescript": "^5.2.2",
+    "vitest": "^0.34.6",
+    "wrangler": "^3.15.0"
+  },
+  "dependencies": {
+    "itty-router": "^4.0.23"
+  }
+} 
