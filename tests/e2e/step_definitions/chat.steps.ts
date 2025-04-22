@@ -50,7 +50,11 @@ Then("ランダムなメッセージを送ってくる", async function () {
     );
   }
 
-  // 注: 実際のメッセージ内容の確認は省略
-  // 仕様によれば、応答は console.log で確認するか、
-  // エコーされることを前提としているため
+  // レスポンス本文を取得して確認
+  const text = await this.response.text();
+
+  // レスポンス本文が空ではないことを確認
+  if (text === "") {
+    throw new Error("Expected response body not to be empty");
+  }
 });
