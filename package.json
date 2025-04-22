@@ -1,0 +1,18 @@
+{
+  "devDependencies": {
+    "@cucumber/cucumber": "^11.2.0",
+    "@playwright/test": "^1.52.0",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.1",
+    "playwright": "^1.52.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "start": "ts-node src/server.ts",
+    "e2e": "cucumber-js tests/e2e/features --require-module ts-node/register --require tests/e2e/step_definitions/**/*.ts --require tests/e2e/support/**/*.ts"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
