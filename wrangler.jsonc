@@ -1,0 +1,6 @@
+{
+  "name": "usako",
+  "compatibility_date": "2025-04-22",
+  "main": "src/server.ts",
+  "compatibility_flags": ["nodejs_compat"]
+} 

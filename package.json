@@ -6,10 +6,13 @@
     "@types/node": "^22.14.1",
     "playwright": "^1.52.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "wrangler": "^4.12.0"
   },
   "scripts": {
     "start": "ts-node src/server.ts",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
     "e2e": "cucumber-js tests/e2e/features --require-module ts-node/register --require tests/e2e/step_definitions/**/*.ts --require tests/e2e/support/**/*.ts"
   },
   "dependencies": {

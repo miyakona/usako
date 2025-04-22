@@ -1,0 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# basic rules
+
+- ソースコードを変更した際、必ず `npm run e2e` を実行し、全てのテストが pass するのを確認すること
