@@ -5,7 +5,7 @@ import {
   ServerResponse,
 } from "http";
 import { Env, D1Database } from "./types";
-import { DEFAULT_PORT } from "./constants";
+import { DEFAULT_PORT, LINE } from "./constants";
 import {
   handleGetRequest,
   handlePostRequest,
@@ -24,7 +24,24 @@ type RequestHandler = (req: IncomingMessage, res: ServerResponse) => void;
  */
 const server = {
   async fetch(request: Request, env: Env, ctx: any) {
-    return handleCloudflareRequest(request, env);
+    // リクエスト情報を詳細にログ出力
+    console.log(
+      `[WORKER] Received ${request.method} request to ${request.url}`
+    );
+    console.log(
+      `[WORKER] Request headers: ${JSON.stringify(
+        Object.fromEntries(request.headers.entries())
+      )}`
+    );
+
+    try {
+      const response = await handleCloudflareRequest(request, env);
+      console.log(`[WORKER] Response status: ${response.status}`);
+      return response;
+    } catch (error) {
+      console.error(`[WORKER] Error handling request: ${error}`);
+      return new Response("Internal Server Error", { status: 500 });
+    }
   },
 };
 
@@ -74,6 +91,18 @@ export async function startServer(port = DEFAULT_PORT): Promise<HttpServer> {
   try {
     // ローカル環境用のD1データベースを初期化
     const db = await createD1Database();
+
+    // 環境変数からトークンを読み込む
+    if (process.env.LINE_CHANNEL_ACCESS_TOKEN) {
+      LINE.CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+      console.log(
+        "LINE_CHANNEL_ACCESS_TOKEN loaded from environment variables"
+      );
+    } else {
+      console.warn(
+        "LINE_CHANNEL_ACCESS_TOKEN is not set in environment variables"
+      );
+    }
 
     // リクエストハンドラーを作成
     const requestHandler = createRequestRouter(db);

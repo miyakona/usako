@@ -142,3 +142,59 @@ export const formatErrorMessage = (error: unknown): string => {
     ? `エラーが発生しました: ${error.message}`
     : `エラーが発生しました: ${String(error)}`;
 };
+
+/**
+ * LINE Messaging APIに返信メッセージを送信する関数
+ * @param responseBody LINE Messaging API形式のレスポンス本文
+ * @returns 送信結果のPromise
+ */
+export const sendLineReply = async (
+  responseBody: LineResponseBody
+): Promise<Response> => {
+  try {
+    // replyTokenがデフォルト値でない場合のみ送信
+    if (responseBody.replyToken !== LINE.DUMMY_TOKEN) {
+      console.log(
+        `[LINE API] Sending reply with token: ${responseBody.replyToken}`
+      );
+      console.log(`[LINE API] Request body: ${JSON.stringify(responseBody)}`);
+      console.log(
+        `[LINE API] Using access token: ${
+          LINE.CHANNEL_ACCESS_TOKEN ? "設定済み" : "未設定"
+        }`
+      );
+
+      const response = await fetch("https://api.line.me/v2/bot/message/reply", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${LINE.CHANNEL_ACCESS_TOKEN}`,
+        },
+        body: JSON.stringify(responseBody),
+      });
+
+      const result = await response.text();
+      console.log(`[LINE API] Response status: ${response.status}`);
+      console.log(
+        `[LINE API] Response headers: ${JSON.stringify([
+          ...response.headers.entries(),
+        ])}`
+      );
+      console.log(`[LINE API] Response body: ${result}`);
+
+      if (!response.ok) {
+        console.error(
+          `[LINE API] Error: ${response.status} ${response.statusText} - ${result}`
+        );
+      }
+
+      return response;
+    } else {
+      console.log("[LINE API] Skipping reply with dummy token");
+      return new Response("Skipped with dummy token", { status: 200 });
+    }
+  } catch (error) {
+    console.error(`[LINE API] Failed to send reply: ${error}`);
+    return new Response(`Failed to send reply: ${error}`, { status: 500 });
+  }
+};

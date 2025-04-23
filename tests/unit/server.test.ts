@@ -1,7 +1,21 @@
 import { createServer } from "http";
 import { startServer } from "../../src/server";
-import { getRandomMessageFromDB } from "../../src/utils";
+import { getRandomMessageFromDB, sendLineReply } from "../../src/utils";
 import * as http from "http";
+
+// LINE APIのモック
+jest.mock("../../src/utils", () => {
+  const originalModule = jest.requireActual("../../src/utils");
+  return {
+    ...originalModule,
+    sendLineReply: jest.fn().mockResolvedValue(
+      new Response(JSON.stringify({ message: "ok" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      })
+    ),
+  };
+});
 
 // D1データベースのモック - SQLiteを使わずにテスト用の実装を提供
 jest.mock("../../src/db", () => ({
@@ -186,6 +200,7 @@ describe("server.ts の単体テスト", () => {
 
       const mockEnv = {
         DB: testMockD1Database,
+        LINE_CHANNEL_ACCESS_TOKEN: "test-token",
       };
 
       // fetchを呼び出す
@@ -218,16 +233,17 @@ describe("server.ts の単体テスト", () => {
 
       const mockEnv = {
         DB: testMockD1Database,
+        LINE_CHANNEL_ACCESS_TOKEN: "test-token",
       };
 
       // fetchを呼び出す
       const response = await server.fetch(mockRequest, mockEnv, {});
 
-      // レスポンスをテスト
+      // レスポンスステータスが200であることを確認
       expect(response.status).toBe(200);
-      const responseBody = await response.json();
 
-      expect(responseBody).toEqual({
+      // sendLineReplyが正しいパラメータで呼ばれたことを確認
+      expect(sendLineReply).toHaveBeenCalledWith({
         replyToken: "test-reply-token",
         messages: [
           {

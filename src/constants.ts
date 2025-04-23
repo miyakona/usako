@@ -18,6 +18,8 @@ export const DB = {
 // LINE関連定数
 export const LINE = {
   DUMMY_TOKEN: "dummy-token",
+  // process.envに依存せず、Cloudflare Workersの環境変数を後で取得するための設定
+  CHANNEL_ACCESS_TOKEN: "",
 };
 
 // エラーメッセージ定数

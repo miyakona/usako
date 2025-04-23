@@ -10,6 +10,7 @@ export interface D1PreparedStatement {
 // 環境変数の型定義
 export interface Env {
   DB: D1Database;
+  LINE_CHANNEL_ACCESS_TOKEN: string;
 }
 
 // メッセージの型定義
