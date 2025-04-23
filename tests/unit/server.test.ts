@@ -185,7 +185,7 @@ describe("server.ts の単体テスト", () => {
       expect(await response.text()).toBe("Hello World!");
     });
 
-    test("POSTリクエストに対してD1からのメッセージを返すこと", async () => {
+    test("POSTリクエストに対してD1からのメッセージをJSON形式で返すこと", async () => {
       // テスト対象のモジュールを動的にインポート
       const serverModule = await import("../../src/server");
       const server = serverModule.default;
@@ -196,7 +196,13 @@ describe("server.ts の単体テスト", () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ events: [{}] }),
+        body: JSON.stringify({
+          events: [
+            {
+              replyToken: "test-reply-token",
+            },
+          ],
+        }),
       });
 
       const mockEnv = {
@@ -208,7 +214,17 @@ describe("server.ts の単体テスト", () => {
 
       // レスポンスをテスト
       expect(response.status).toBe(200);
-      expect(await response.text()).toBe("テストメッセージ");
+      const responseBody = await response.json();
+
+      expect(responseBody).toEqual({
+        replyToken: "test-reply-token",
+        messages: [
+          {
+            type: "text",
+            text: "テストメッセージ",
+          },
+        ],
+      });
 
       // D1が正しく呼び出されたことを確認
       expect(mockD1Database.prepare).toHaveBeenCalledWith(
@@ -220,43 +236,76 @@ describe("server.ts の単体テスト", () => {
 
   // getRandomMessageFromDBのテスト
   describe("getRandomMessageFromDB", () => {
-    test("D1から正常にメッセージを取得できること", async () => {
+    test("D1から正常にメッセージを取得しLINE Messaging API形式のオブジェクトを返すこと", async () => {
       // D1からメッセージを正常に取得できる場合のテスト
       mockD1Database.all.mockResolvedValueOnce({
         results: [{ message: "D1からのテストメッセージ" }],
       });
 
+      const replyToken = "test-reply-token";
+
       // 関数を呼び出す（エクスポートされている関数を直接テスト）
-      const message = await getRandomMessageFromDB(mockD1Database);
+      const result = await getRandomMessageFromDB(mockD1Database, replyToken);
 
       // 期待される結果
-      expect(message).toBe("D1からのテストメッセージ");
+      expect(result).toEqual({
+        replyToken: replyToken,
+        messages: [
+          {
+            type: "text",
+            text: "D1からのテストメッセージ",
+          },
+        ],
+      });
+
       expect(mockD1Database.prepare).toHaveBeenCalledWith(
         "SELECT message FROM messages ORDER BY RANDOM() LIMIT 1"
       );
     });
 
-    test("D1からメッセージ取得に失敗した場合はエラーメッセージを返すこと", async () => {
+    test("D1からメッセージ取得に失敗した場合はエラーメッセージを含むLINE Messaging API形式のオブジェクトを返すこと", async () => {
       // D1からメッセージ取得に失敗する場合のテスト
       const testError = new Error("DB error");
       mockD1Database.all.mockRejectedValueOnce(testError);
 
+      const replyToken = "test-reply-token";
+
       // 関数を呼び出す
-      const message = await getRandomMessageFromDB(mockD1Database);
+      const result = await getRandomMessageFromDB(mockD1Database, replyToken);
 
       // 期待される結果
-      expect(message).toBe(`エラーが発生しました: ${testError.message}`);
+      expect(result).toEqual({
+        replyToken: replyToken,
+        messages: [
+          {
+            type: "text",
+            text: `エラーが発生しました: ${testError.message}`,
+          },
+        ],
+      });
     });
 
-    test("D1から空の結果が返された場合はデフォルトメッセージを返すこと", async () => {
-      // D1から空の結果が返される場合のテスト
-      mockD1Database.all.mockResolvedValueOnce({ results: [] });
+    test("結果が空の場合はデフォルトメッセージを含むLINE Messaging API形式のオブジェクトを返すこと", async () => {
+      // 結果が空の場合のテスト
+      mockD1Database.all.mockResolvedValueOnce({
+        results: [],
+      });
+
+      const replyToken = "test-reply-token";
 
       // 関数を呼び出す
-      const message = await getRandomMessageFromDB(mockD1Database);
+      const result = await getRandomMessageFromDB(mockD1Database, replyToken);
 
       // 期待される結果
-      expect(message).toBe("こんにちは！");
+      expect(result).toEqual({
+        replyToken: replyToken,
+        messages: [
+          {
+            type: "text",
+            text: "こんにちは！", // DEFAULT_MESSAGEの値
+          },
+        ],
+      });
     });
   });
 });

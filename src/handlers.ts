@@ -7,21 +7,38 @@ import {
 } from "./utils";
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT } from "./constants";
 
+// LINE Messaging APIからのイベント型定義
+interface LineEvent {
+  type: string;
+  replyToken?: string;
+  message?: {
+    text: string;
+  };
+  source?: {
+    userId: string;
+  };
+}
+
+// LINE Messaging APIからのリクエストボディ型定義
+interface LineRequestBody {
+  events?: LineEvent[];
+}
+
 /**
  * レスポンスを返す共通関数
  * @param res レスポンスオブジェクト
  * @param status ステータスコード
- * @param message メッセージ
+ * @param message メッセージまたはJSONオブジェクト
  * @param headers ヘッダー
  */
 export const sendResponse = (
   res: ServerResponse,
   status: number = 200,
-  message: string = "",
+  message: string | object = "",
   headers: Record<string, string> = CONTENT_TYPE_TEXT
 ): void => {
   res.writeHead(status, headers);
-  res.end(message);
+  res.end(typeof message === "string" ? message : JSON.stringify(message));
 };
 
 /**
@@ -36,19 +53,21 @@ export const handleGetRequest = (res: ServerResponse): void => {
  * POSTリクエストのデータを処理する関数
  * @param data リクエストボディ
  * @param db D1データベース
- * @returns 処理結果のメッセージ
+ * @returns 処理結果のJSONオブジェクト
  */
 export const processPostRequestData = async (
   data: string,
   db: D1Database
-): Promise<string> => {
-  const body = safeJsonParse<{ events?: unknown[] }>(data);
+): Promise<object> => {
+  const body = safeJsonParse<LineRequestBody>(data);
 
   if (body && body.events && Array.isArray(body.events)) {
-    return await getRandomMessageFromDB(db);
+    // replyTokenを取得（存在する場合）
+    const replyToken = body.events[0]?.replyToken || "dummy-token";
+    return await getRandomMessageFromDB(db, replyToken);
   }
 
-  return "";
+  return {};
 };
 
 /**
@@ -72,7 +91,7 @@ export const handlePostRequest = (
     try {
       const responseMessage = await processPostRequestData(data, db);
 
-      if (responseMessage) {
+      if (Object.keys(responseMessage).length > 0) {
         sendResponse(res, 200, responseMessage, CONTENT_TYPE_JSON);
         return;
       }
@@ -99,11 +118,16 @@ export const handleCloudflareRequest = async (
 ): Promise<Response> => {
   if (request.method === "POST") {
     try {
-      const body = await request.json();
+      const body = (await request.json()) as LineRequestBody;
 
       if (body.events && Array.isArray(body.events)) {
-        const randomMessage = await getRandomMessageFromDB(env.DB);
-        return new Response(randomMessage, { status: 200 });
+        // replyTokenを取得（存在する場合）
+        const replyToken = body.events[0]?.replyToken || "dummy-token";
+        const responseData = await getRandomMessageFromDB(env.DB, replyToken);
+        return new Response(JSON.stringify(responseData), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
       }
     } catch (error) {
       console.error("Error handling POST request:", error);

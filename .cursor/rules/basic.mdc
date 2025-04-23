@@ -6,3 +6,5 @@ alwaysApply: true
 # basic rules
 
 - ソースコードを変更した際、必ず `npm run e2e` を実行し、全てのテストが pass するのを確認すること
+- ソースコードを変更した際、必ず単体テストを実行し、全てのテストが pass するのを確認すること
+- LINE Messaging API を利用する箇所では、リファレンス（https://developers.line.biz/ja/reference/messaging-api/）に準拠した実装を行うこと

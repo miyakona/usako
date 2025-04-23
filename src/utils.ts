@@ -2,25 +2,47 @@ import { D1Database, Message } from "./types";
 import { DEFAULT_MESSAGE } from "./constants";
 
 /**
- * D1からランダムなメッセージを取得する関数
+ * D1からランダムなメッセージを取得し、LINE Messaging API形式のJSONオブジェクトを返す
  * @param db D1データベース
- * @returns ランダムなメッセージまたはエラーメッセージ
+ * @param replyToken 返信用トークン
+ * @returns LINE Messaging API形式のJSONオブジェクト
  */
 export const getRandomMessageFromDB = async (
-  db: D1Database
-): Promise<string> => {
+  db: D1Database,
+  replyToken: string = "dummy-token"
+): Promise<object> => {
   try {
     // ランダムな1つのメッセージを取得
     const { results } = await db
       .prepare("SELECT message FROM messages ORDER BY RANDOM() LIMIT 1")
       .all();
 
-    // 結果の検証と処理
-    return results && results.length > 0 ? results[0].message : DEFAULT_MESSAGE;
+    // メッセージ内容
+    const messageText =
+      results && results.length > 0 ? results[0].message : DEFAULT_MESSAGE;
+
+    // LINE Messaging API形式のJSONオブジェクトを作成
+    return {
+      replyToken: replyToken,
+      messages: [
+        {
+          type: "text",
+          text: messageText,
+        },
+      ],
+    };
   } catch (error) {
     console.error("Error fetching message from DB:", error);
-    // エラーメッセージをそのまま返す
-    return formatErrorMessage(error);
+    // エラーの場合もLINE Messaging API形式のJSONオブジェクトを返す
+    return {
+      replyToken: replyToken,
+      messages: [
+        {
+          type: "text",
+          text: formatErrorMessage(error),
+        },
+      ],
+    };
   }
 };
 
