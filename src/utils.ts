@@ -1,4 +1,4 @@
-import { D1Database } from "./types";
+import { D1Database, Message } from "./types";
 import { DEFAULT_MESSAGE } from "./constants";
 
 /**
@@ -15,17 +15,24 @@ export const getRandomMessageFromDB = async (
       .prepare("SELECT message FROM messages ORDER BY RANDOM() LIMIT 1")
       .all();
 
-    if (results && results.length > 0) {
-      return results[0].message;
-    }
-    return DEFAULT_MESSAGE;
+    // 結果の検証と処理
+    return results && results.length > 0 ? results[0].message : DEFAULT_MESSAGE;
   } catch (error) {
     console.error("Error fetching message from DB:", error);
     // エラーメッセージをそのまま返す
-    return error instanceof Error
-      ? `エラーが発生しました: ${error.message}`
-      : `エラーが発生しました: ${String(error)}`;
+    return formatErrorMessage(error);
   }
+};
+
+/**
+ * エラーメッセージをフォーマットする関数
+ * @param error エラーオブジェクト
+ * @returns フォーマットされたエラーメッセージ
+ */
+export const formatErrorMessage = (error: unknown): string => {
+  return error instanceof Error
+    ? `エラーが発生しました: ${error.message}`
+    : `エラーが発生しました: ${String(error)}`;
 };
 
 /**
@@ -33,9 +40,9 @@ export const getRandomMessageFromDB = async (
  * @param data パースする文字列
  * @returns パース結果またはnull
  */
-export const safeJsonParse = (data: string): any | null => {
+export const safeJsonParse = <T>(data: string): T | null => {
   try {
-    return JSON.parse(data);
+    return JSON.parse(data) as T;
   } catch (error) {
     console.error("Error parsing JSON:", error);
     return null;

@@ -1,15 +1,54 @@
 import { IncomingMessage, ServerResponse } from "http";
-import { Env, D1Database } from "./types";
-import { getRandomMessageFromDB, safeJsonParse } from "./utils";
+import { Env, D1Database, Message } from "./types";
+import {
+  getRandomMessageFromDB,
+  safeJsonParse,
+  formatErrorMessage,
+} from "./utils";
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT } from "./constants";
+
+/**
+ * レスポンスを返す共通関数
+ * @param res レスポンスオブジェクト
+ * @param status ステータスコード
+ * @param message メッセージ
+ * @param headers ヘッダー
+ */
+export const sendResponse = (
+  res: ServerResponse,
+  status: number = 200,
+  message: string = "",
+  headers: Record<string, string> = CONTENT_TYPE_TEXT
+): void => {
+  res.writeHead(status, headers);
+  res.end(message);
+};
 
 /**
  * GETリクエストのハンドラー
  * @param res レスポンスオブジェクト
  */
 export const handleGetRequest = (res: ServerResponse): void => {
-  res.writeHead(200, CONTENT_TYPE_TEXT);
-  res.end("Hello World!");
+  sendResponse(res, 200, "Hello World!", CONTENT_TYPE_TEXT);
+};
+
+/**
+ * POSTリクエストのデータを処理する関数
+ * @param data リクエストボディ
+ * @param db D1データベース
+ * @returns 処理結果のメッセージ
+ */
+export const processPostRequestData = async (
+  data: string,
+  db: D1Database
+): Promise<string> => {
+  const body = safeJsonParse<{ events?: unknown[] }>(data);
+
+  if (body && body.events && Array.isArray(body.events)) {
+    return await getRandomMessageFromDB(db);
+  }
+
+  return "";
 };
 
 /**
@@ -30,17 +69,21 @@ export const handlePostRequest = (
   });
 
   req.on("end", async () => {
-    const body = safeJsonParse(data);
+    try {
+      const responseMessage = await processPostRequestData(data, db);
 
-    if (body && body.events && Array.isArray(body.events)) {
-      const randomMessage = await getRandomMessageFromDB(db);
-      res.writeHead(200, CONTENT_TYPE_JSON);
-      res.end(randomMessage);
-      return;
+      if (responseMessage) {
+        sendResponse(res, 200, responseMessage, CONTENT_TYPE_JSON);
+        return;
+      }
+
+      // JSON解析エラーを含め、常に200を返す
+      sendResponse(res, 200);
+    } catch (error) {
+      console.error("Error in POST request handler:", error);
+      // エラーが発生しても200で返す（テスト仕様に合わせる）
+      sendResponse(res, 200, "");
     }
-
-    res.writeHead(200);
-    res.end();
   });
 };
 
@@ -64,6 +107,8 @@ export const handleCloudflareRequest = async (
       }
     } catch (error) {
       console.error("Error handling POST request:", error);
+      // エラーが発生しても200で返す（テスト仕様に合わせる）
+      return new Response("", { status: 200 });
     }
   }
 

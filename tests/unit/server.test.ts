@@ -118,7 +118,7 @@ describe("server.ts の単体テスト", () => {
       expect(mockRes.end).toHaveBeenCalled();
     });
 
-    test("不正なPOSTリクエストに対して200を返すこと", () => {
+    test("不正なPOSTリクエストに対して200を返すこと", async () => {
       const server = startServer(8791);
 
       // リクエストハンドラーを取得
@@ -128,14 +128,18 @@ describe("server.ts の単体テスト", () => {
       const mockReq = {
         method: "POST",
         url: "/",
-        on: jest.fn((event: string, callback: Function) => {
-          if (event === "data") {
-            callback("不正なJSON");
-          }
-          if (event === "end") {
-            callback();
-          }
-        }),
+        on: jest
+          .fn()
+          .mockImplementation((event: string, callback: Function) => {
+            if (event === "data") {
+              callback("不正なJSON");
+            }
+            if (event === "end") {
+              // 非同期コールバックをシミュレート
+              setTimeout(() => callback(), 0);
+            }
+            return mockReq;
+          }),
       };
 
       const mockRes = {
@@ -146,8 +150,11 @@ describe("server.ts の単体テスト", () => {
       // リクエストハンドラーを呼び出す
       requestHandler(mockReq, mockRes);
 
+      // 非同期処理を待つ
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       // エラーが発生しても200が返されることを確認
-      expect(mockRes.writeHead).toHaveBeenCalledWith(200);
+      expect(mockRes.writeHead).toHaveBeenCalledWith(200, expect.any(Object));
       expect(mockRes.end).toHaveBeenCalled();
     });
   });
