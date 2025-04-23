@@ -12,6 +12,7 @@ import {
   handleCloudflareRequest,
 } from "./handlers";
 import { createD1Database } from "./db";
+import { sendResponse } from "./utils";
 
 /**
  * リクエストハンドラーの型定義
@@ -32,8 +33,7 @@ const server = {
  * @param res レスポンスオブジェクト
  */
 const handleMethodNotAllowed = (res: ServerResponse): void => {
-  res.writeHead(405, { "Content-Type": "text/plain" });
-  res.end("Method Not Allowed");
+  sendResponse(res, 405, "Method Not Allowed");
 };
 
 /**
@@ -44,25 +44,22 @@ const handleMethodNotAllowed = (res: ServerResponse): void => {
 export const createRequestRouter = (db: D1Database): RequestHandler => {
   return (req, res) => {
     try {
-      // POSTリクエストの処理
-      if (req.method === "POST") {
-        handlePostRequest(req, res, db);
-        return;
+      // メソッドに基づいてルーティング
+      switch (req.method) {
+        case "POST":
+          handlePostRequest(req, res, db);
+          break;
+        case "GET":
+          handleGetRequest(res);
+          break;
+        default:
+          // サポートされていないメソッドには405を返す
+          handleMethodNotAllowed(res);
       }
-
-      // GETリクエストの処理
-      if (req.method === "GET") {
-        handleGetRequest(res);
-        return;
-      }
-
-      // サポートされていないメソッドには405を返す
-      handleMethodNotAllowed(res);
     } catch (error) {
       console.error("Error in request router:", error);
       // 内部エラーでも200を返す（テスト仕様に合わせる）
-      res.writeHead(200, { "Content-Type": "text/plain" });
-      res.end("");
+      sendResponse(res, 200, "");
     }
   };
 };

@@ -4,39 +4,10 @@ import {
   getRandomMessageFromDB,
   formatErrorMessage,
   createLineResponse,
+  safeJsonParse,
+  sendResponse,
 } from "./utils";
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT } from "./constants";
-
-/**
- * JSONを安全にパースする関数
- * @param data パースする文字列
- * @returns パース結果またはnull
- */
-const safeJsonParse = <T>(data: string): T | null => {
-  try {
-    return JSON.parse(data) as T;
-  } catch (error) {
-    console.error("Error parsing JSON:", error);
-    return null;
-  }
-};
-
-/**
- * レスポンスを返す共通関数
- * @param res レスポンスオブジェクト
- * @param status ステータスコード
- * @param message メッセージまたはJSONオブジェクト
- * @param headers ヘッダー
- */
-export const sendResponse = (
-  res: ServerResponse,
-  status: number = 200,
-  message: string | object = "",
-  headers: Record<string, string> = CONTENT_TYPE_TEXT
-): void => {
-  res.writeHead(status, headers);
-  res.end(typeof message === "string" ? message : JSON.stringify(message));
-};
 
 /**
  * GETリクエストのハンドラー
