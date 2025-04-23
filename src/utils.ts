@@ -1,6 +1,34 @@
 import { D1Database, Message, LineResponseBody } from "./types";
-import { DEFAULT_MESSAGE, CONTENT_TYPE_TEXT } from "./constants";
+import {
+  DEFAULT_MESSAGE,
+  CONTENT_TYPE_TEXT,
+  LINE_DUMMY_TOKEN,
+  ERROR_PARSING_JSON,
+  DB_QUERY_RANDOM_MESSAGE,
+  ERROR_FETCHING_MESSAGE,
+  ERROR_DB_CONNECTION,
+} from "./constants";
 import { ServerResponse } from "http";
+
+/**
+ * アプリケーション全体で統一されたエラーハンドリングを提供
+ * @param operation 実行する操作
+ * @param fallback 失敗時のフォールバック値
+ * @param logMessage エラー時のログメッセージ
+ * @returns 操作の結果またはフォールバック値
+ */
+export const safeOperation = async <T>(
+  operation: () => Promise<T>,
+  fallback: T,
+  logMessage: string = "操作に失敗しました"
+): Promise<T> => {
+  try {
+    return await operation();
+  } catch (error) {
+    console.error(`${logMessage}:`, error);
+    return fallback;
+  }
+};
 
 /**
  * JSONを安全にパースする関数
@@ -11,7 +39,7 @@ export const safeJsonParse = <T>(data: string): T | null => {
   try {
     return JSON.parse(data) as T;
   } catch (error) {
-    console.error("Error parsing JSON:", error);
+    console.error(ERROR_PARSING_JSON, error);
     return null;
   }
 };
@@ -60,7 +88,7 @@ export const createCloudflareResponse = (
  */
 export const createLineResponse = (
   text: string,
-  replyToken: string = "dummy-token"
+  replyToken: string = LINE_DUMMY_TOKEN
 ): LineResponseBody => {
   return {
     replyToken: replyToken,
@@ -80,11 +108,10 @@ export const createLineResponse = (
  */
 const getMessageFromDb = async (db: D1Database): Promise<string> => {
   try {
-    const query = "SELECT message FROM messages ORDER BY RANDOM() LIMIT 1";
-    const { results } = await db.prepare(query).all();
+    const { results } = await db.prepare(DB_QUERY_RANDOM_MESSAGE).all();
     return results && results.length > 0 ? results[0].message : DEFAULT_MESSAGE;
   } catch (error) {
-    console.error("Error fetching message from DB:", error);
+    console.error(ERROR_FETCHING_MESSAGE, error);
     return formatErrorMessage(error);
   }
 };
@@ -97,20 +124,15 @@ const getMessageFromDb = async (db: D1Database): Promise<string> => {
  */
 export const getRandomMessageFromDB = async (
   db: D1Database,
-  replyToken: string = "dummy-token"
+  replyToken: string = LINE_DUMMY_TOKEN
 ): Promise<LineResponseBody> => {
   if (!db) {
-    console.error("Database connection is null or undefined");
+    console.error(ERROR_DB_CONNECTION);
     return createLineResponse(DEFAULT_MESSAGE, replyToken);
   }
 
-  try {
-    const messageText = await getMessageFromDb(db);
-    return createLineResponse(messageText, replyToken);
-  } catch (error) {
-    console.error("Error getting random message:", error);
-    return createLineResponse(DEFAULT_MESSAGE, replyToken);
-  }
+  const messageText = await getMessageFromDb(db);
+  return createLineResponse(messageText, replyToken);
 };
 
 /**

@@ -7,8 +7,16 @@ import {
   safeJsonParse,
   sendResponse,
   createCloudflareResponse,
+  safeOperation,
 } from "./utils";
-import { CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT } from "./constants";
+import {
+  CONTENT_TYPE_JSON,
+  CONTENT_TYPE_TEXT,
+  ERROR_PROCESSING_LINE_EVENTS,
+  ERROR_POST_REQUEST,
+  ERROR_CLOUDFLARE_REQUEST,
+  LINE_DUMMY_TOKEN,
+} from "./constants";
 
 /**
  * GETリクエストのハンドラー
@@ -30,7 +38,7 @@ export const processLineEvents = async (
 ): Promise<LineResponseBody | Record<string, never>> => {
   if (body.events && Array.isArray(body.events)) {
     // replyTokenを取得（存在する場合）
-    const replyToken = body.events[0]?.replyToken || "dummy-token";
+    const replyToken = body.events[0]?.replyToken || LINE_DUMMY_TOKEN;
     return await getRandomMessageFromDB(db, replyToken);
   }
   return {};
@@ -46,19 +54,19 @@ export const safeProcessLineEvents = async (
   body: LineRequestBody | string,
   db: D1Database
 ): Promise<LineResponseBody | Record<string, never>> => {
-  try {
-    // 文字列の場合はJSONパース
-    const parsedBody =
-      typeof body === "string" ? safeJsonParse<LineRequestBody>(body) : body;
+  return await safeOperation(
+    async () => {
+      const parsedBody =
+        typeof body === "string" ? safeJsonParse<LineRequestBody>(body) : body;
 
-    if (parsedBody) {
-      return await processLineEvents(parsedBody, db);
-    }
-  } catch (error) {
-    console.error("Error processing LINE events:", error);
-  }
-
-  return {};
+      if (parsedBody) {
+        return await processLineEvents(parsedBody, db);
+      }
+      return {};
+    },
+    {},
+    ERROR_PROCESSING_LINE_EVENTS
+  );
 };
 
 /**
@@ -79,21 +87,19 @@ export const handlePostRequest = (
   });
 
   req.on("end", async () => {
-    try {
-      const responseMessage = await safeProcessLineEvents(data, db);
-      const hasContent = Object.keys(responseMessage).length > 0;
+    const responseMessage = await safeOperation(
+      async () => await safeProcessLineEvents(data, db),
+      {},
+      ERROR_POST_REQUEST
+    );
 
-      sendResponse(
-        res,
-        200,
-        hasContent ? responseMessage : "",
-        hasContent ? CONTENT_TYPE_JSON : CONTENT_TYPE_TEXT
-      );
-    } catch (error) {
-      console.error("Error in POST request handler:", error);
-      // エラーが発生しても200で返す（テスト仕様に合わせる）
-      sendResponse(res, 200, "");
-    }
+    const hasContent = Object.keys(responseMessage).length > 0;
+    sendResponse(
+      res,
+      200,
+      hasContent ? responseMessage : "",
+      hasContent ? CONTENT_TYPE_JSON : CONTENT_TYPE_TEXT
+    );
   });
 };
 
@@ -108,21 +114,21 @@ export const handleCloudflareRequest = async (
   env: Env
 ): Promise<Response> => {
   if (request.method === "POST") {
-    try {
-      const body = await request.json();
-      const responseData = await safeProcessLineEvents(body, env.DB);
-      const hasContent = Object.keys(responseData).length > 0;
+    return await safeOperation(
+      async () => {
+        const body = await request.json();
+        const responseData = await safeProcessLineEvents(body, env.DB);
+        const hasContent = Object.keys(responseData).length > 0;
 
-      return createCloudflareResponse(
-        200,
-        hasContent ? responseData : "",
-        hasContent ? CONTENT_TYPE_JSON : CONTENT_TYPE_TEXT
-      );
-    } catch (error) {
-      console.error("Error handling POST request:", error);
-      // エラーが発生しても200で返す（テスト仕様に合わせる）
-      return createCloudflareResponse(200, "");
-    }
+        return createCloudflareResponse(
+          200,
+          hasContent ? responseData : "",
+          hasContent ? CONTENT_TYPE_JSON : CONTENT_TYPE_TEXT
+        );
+      },
+      createCloudflareResponse(200, ""),
+      ERROR_CLOUDFLARE_REQUEST
+    );
   }
 
   return createCloudflareResponse(200, "Hello World!", CONTENT_TYPE_TEXT);

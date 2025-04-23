@@ -3,6 +3,8 @@ import * as fs from "fs";
 import * as path from "path";
 import * as sqlite3 from "sqlite3";
 import { open, Database } from "sqlite";
+import { safeOperation } from "./utils";
+import { DB_QUERY_RANDOM_MESSAGE } from "./constants";
 
 /**
  * SQLiteデータベースを使用してクエリを実行する関数
@@ -16,12 +18,11 @@ const executeQuery = async (
   query: string,
   params: any[] = []
 ): Promise<any[]> => {
-  try {
-    return await db.all(query, params);
-  } catch (error) {
-    console.error("データベースクエリ実行エラー:", error);
-    return [];
-  }
+  return await safeOperation(
+    async () => await db.all(query, params),
+    [],
+    "データベースクエリ実行エラー"
+  );
 };
 
 /**
