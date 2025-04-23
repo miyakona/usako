@@ -1,10 +1,6 @@
 import { IncomingMessage, ServerResponse } from "http";
-import { Env } from "./types";
-import {
-  getRandomMessage,
-  getRandomMessageFromDB,
-  safeJsonParse,
-} from "./utils";
+import { Env, D1Database } from "./types";
+import { getRandomMessageFromDB, safeJsonParse } from "./utils";
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT } from "./constants";
 
 /**
@@ -20,10 +16,12 @@ export const handleGetRequest = (res: ServerResponse): void => {
  * POSTリクエストのハンドラー
  * @param req リクエストオブジェクト
  * @param res レスポンスオブジェクト
+ * @param db D1データベース
  */
 export const handlePostRequest = (
   req: IncomingMessage,
-  res: ServerResponse
+  res: ServerResponse,
+  db: D1Database
 ): void => {
   let data = "";
 
@@ -31,12 +29,13 @@ export const handlePostRequest = (
     data += chunk;
   });
 
-  req.on("end", () => {
+  req.on("end", async () => {
     const body = safeJsonParse(data);
 
     if (body && body.events && Array.isArray(body.events)) {
+      const randomMessage = await getRandomMessageFromDB(db);
       res.writeHead(200, CONTENT_TYPE_JSON);
-      res.end(getRandomMessage());
+      res.end(randomMessage);
       return;
     }
 

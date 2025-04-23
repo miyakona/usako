@@ -1,5 +1,5 @@
 import { D1Database } from "./types";
-import { DEFAULT_MESSAGE, RANDOM_MESSAGES } from "./constants";
+import { DEFAULT_MESSAGE } from "./constants";
 
 /**
  * D1からランダムなメッセージを取得する関数
@@ -23,14 +23,6 @@ export const getRandomMessageFromDB = async (
     console.error("Error fetching message from DB:", error);
     return DEFAULT_MESSAGE;
   }
-};
-
-/**
- * フォールバック用のランダムメッセージを返す関数
- * @returns ランダムなメッセージ
- */
-export const getRandomMessage = (): string => {
-  return RANDOM_MESSAGES[Math.floor(Math.random() * RANDOM_MESSAGES.length)];
 };
 
 /**

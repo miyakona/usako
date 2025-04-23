@@ -1,12 +1,13 @@
 import { createServer } from "http";
-import { Env } from "./types";
+import { Env, D1Database } from "./types";
 import { DEFAULT_PORT } from "./constants";
 import {
   handleGetRequest,
   handlePostRequest,
   handleCloudflareRequest,
 } from "./handlers";
-import { getRandomMessage, getRandomMessageFromDB } from "./utils";
+import { getRandomMessageFromDB } from "./utils";
+import { createD1Database } from "./db";
 
 /**
  * Cloudflare Workersのサーバーオブジェクト
@@ -23,9 +24,12 @@ const server = {
  * @returns HTTPサーバーインスタンス
  */
 export function startServer(port = DEFAULT_PORT) {
+  // ローカル環境用のD1データベースを初期化
+  const db = createD1Database();
+
   const httpServer = createServer((req, res) => {
     if (req.method === "POST" && req.url === "/") {
-      handlePostRequest(req, res);
+      handlePostRequest(req, res, db);
       return;
     }
 
@@ -40,6 +44,6 @@ export function startServer(port = DEFAULT_PORT) {
 }
 
 // 以前のバージョンとの互換性のためにエクスポート
-export { getRandomMessage, getRandomMessageFromDB };
+export { getRandomMessageFromDB };
 
 export default server;

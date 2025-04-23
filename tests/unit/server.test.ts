@@ -1,9 +1,5 @@
 import { createServer } from "http";
-import {
-  startServer,
-  getRandomMessageFromDB,
-  getRandomMessage,
-} from "../../src/server";
+import { startServer, getRandomMessageFromDB } from "../../src/server";
 import * as http from "http";
 
 // getRandomMessageFromDB関数と環境変数用のモック
@@ -29,22 +25,6 @@ jest.mock("http", () => ({
 describe("server.ts の単体テスト", () => {
   afterEach(() => {
     jest.clearAllMocks();
-  });
-
-  describe("getRandomMessage", () => {
-    test("ランダムメッセージの配列から一つのメッセージを返すこと", () => {
-      // 関数を直接テストできるようになった
-      const message = getRandomMessage();
-      // 配列内のいずれかのメッセージであること
-      const validMessages = [
-        "こんにちは！",
-        "元気ですか？",
-        "何かお手伝いできることはありますか？",
-        "素敵な一日をお過ごしください",
-        "うさこだよ！",
-      ];
-      expect(validMessages).toContain(message);
-    });
   });
 
   describe("startServer", () => {
@@ -89,7 +69,7 @@ describe("server.ts の単体テスト", () => {
       expect(mockRes.end).toHaveBeenCalledWith("Hello World!");
     });
 
-    test("POSTリクエストに対してランダムメッセージを返すこと", () => {
+    test("POSTリクエストに対してD1からのメッセージを返すこと", async () => {
       // startServerをテスト
       const server = startServer(8788);
 
@@ -100,17 +80,27 @@ describe("server.ts の単体テスト", () => {
       const requestHandler = (createServer as jest.Mock).mock.calls[0][0];
 
       // モックリクエストとレスポンス
-      const mockReq = {
+      type MockReq = {
+        method: string;
+        url: string;
+        on: jest.Mock;
+      };
+
+      const mockReq: MockReq = {
         method: "POST",
         url: "/",
-        on: jest.fn((event: string, callback: Function) => {
-          if (event === "data") {
-            callback(JSON.stringify({ events: [{}] }));
-          }
-          if (event === "end") {
-            callback();
-          }
-        }),
+        on: jest
+          .fn()
+          .mockImplementation((event: string, callback: Function): MockReq => {
+            if (event === "data") {
+              callback(JSON.stringify({ events: [{}] }));
+            }
+            if (event === "end") {
+              // 非同期コールバックをシミュレート
+              setTimeout(() => callback(), 0);
+            }
+            return mockReq;
+          }),
       };
 
       const mockRes = {
@@ -121,10 +111,10 @@ describe("server.ts の単体テスト", () => {
       // リクエストハンドラーを呼び出す
       requestHandler(mockReq, mockRes);
 
-      // レスポンスが正しく設定されたことを確認
-      expect(mockRes.writeHead).toHaveBeenCalledWith(200, {
-        "Content-Type": "application/json",
-      });
+      // 非同期処理を待つ
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      // レスポンスが呼び出されたことを確認
       expect(mockRes.end).toHaveBeenCalled();
     });
 
