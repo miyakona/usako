@@ -1,48 +1,57 @@
 import { Given, When, Then, setDefaultTimeout } from "@cucumber/cucumber";
 import { APIRequestContext, request } from "@playwright/test";
+import { CustomWorld } from "../support/world";
 
-// デフォルトのタイムアウト設定（必要に応じて調整）
+// デフォルトのタイムアウト設定
 setDefaultTimeout(30 * 1000);
 
-let apiContext: APIRequestContext;
-
-// 前提条件のステップ（サーバー起動確認は省略してno-opとする）
-Given("サーバーが起動していること", async function () {
-  // サーバー起動確認は省略（no-op）
-  apiContext = await request.newContext({
-    baseURL: "http://localhost:8787",
+// 前提条件のステップ
+Given("サーバーが起動していること", async function (this: CustomWorld) {
+  this.apiContext = await request.newContext({
+    baseURL: this.baseURL,
   });
 });
 
 // メッセージを送信するステップ
-When("「{string}」と話しかける", async function (message: string) {
-  // LINE Messaging API形式のリクエストボディを作成
-  const requestBody = {
-    events: [
-      {
-        type: "message",
-        replyToken: "dummy-token",
-        message: {
-          text: message,
-        },
-        source: {
-          userId: "dummy-user",
-        },
-      },
-    ],
-  };
+When(
+  "「{string}」と話しかける",
+  async function (this: CustomWorld, message: string) {
+    if (!this.apiContext) {
+      throw new Error("API context is not initialized");
+    }
 
-  // APIリクエストを送信
-  this.response = await apiContext.post("/", {
-    data: requestBody,
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
-});
+    // LINE Messaging API形式のリクエストボディ
+    const requestBody = {
+      events: [
+        {
+          type: "message",
+          replyToken: "dummy-token",
+          message: {
+            text: message,
+          },
+          source: {
+            userId: "dummy-user",
+          },
+        },
+      ],
+    };
+
+    // APIリクエストを送信
+    this.response = await this.apiContext.post("/", {
+      data: requestBody,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+);
 
 // レスポンス確認のステップ
-Then("ランダムなメッセージを送ってくる", async function () {
+Then("ランダムなメッセージを送ってくる", async function (this: CustomWorld) {
+  if (!this.response) {
+    throw new Error("Response is not available");
+  }
+
   // ステータスコードが200であることを確認
   if (this.response.status() !== 200) {
     throw new Error(
@@ -51,10 +60,10 @@ Then("ランダムなメッセージを送ってくる", async function () {
   }
 
   // レスポンス本文を取得して確認
-  const text = await this.response.text();
+  const responseText = await this.response.text();
 
   // レスポンス本文が空ではないことを確認
-  if (text === "") {
+  if (!responseText) {
     throw new Error("Expected response body not to be empty");
   }
 });
