@@ -4,7 +4,7 @@ import { DEFAULT_MESSAGE } from "./constants";
 /**
  * D1からランダムなメッセージを取得する関数
  * @param db D1データベース
- * @returns ランダムなメッセージ
+ * @returns ランダムなメッセージまたはエラーメッセージ
  */
 export const getRandomMessageFromDB = async (
   db: D1Database
@@ -21,7 +21,10 @@ export const getRandomMessageFromDB = async (
     return DEFAULT_MESSAGE;
   } catch (error) {
     console.error("Error fetching message from DB:", error);
-    return DEFAULT_MESSAGE;
+    // エラーメッセージをそのまま返す
+    return error instanceof Error
+      ? `エラーが発生しました: ${error.message}`
+      : `エラーが発生しました: ${String(error)}`;
   }
 };
 

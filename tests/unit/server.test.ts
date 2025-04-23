@@ -229,15 +229,16 @@ describe("server.ts の単体テスト", () => {
       );
     });
 
-    test("D1からメッセージ取得に失敗した場合はデフォルトメッセージを返すこと", async () => {
+    test("D1からメッセージ取得に失敗した場合はエラーメッセージを返すこと", async () => {
       // D1からメッセージ取得に失敗する場合のテスト
-      mockD1Database.all.mockRejectedValueOnce(new Error("DB error"));
+      const testError = new Error("DB error");
+      mockD1Database.all.mockRejectedValueOnce(testError);
 
       // 関数を呼び出す
       const message = await getRandomMessageFromDB(mockD1Database);
 
       // 期待される結果
-      expect(message).toBe("こんにちは！");
+      expect(message).toBe(`エラーが発生しました: ${testError.message}`);
     });
 
     test("D1から空の結果が返された場合はデフォルトメッセージを返すこと", async () => {
