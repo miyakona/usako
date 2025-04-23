@@ -10,7 +10,9 @@ interface D1PreparedStatement {
 }
 
 // D1からランダムなメッセージを取得する関数
-const getRandomMessageFromDB = async (db: D1Database): Promise<string> => {
+export const getRandomMessageFromDB = async (
+  db: D1Database
+): Promise<string> => {
   try {
     // ランダムな1つのメッセージを取得
     const { results } = await db
@@ -28,7 +30,7 @@ const getRandomMessageFromDB = async (db: D1Database): Promise<string> => {
 };
 
 // フォールバック用のランダムメッセージを返す関数
-const getRandomMessage = () => {
+export const getRandomMessage = () => {
   const messages = [
     "こんにちは！",
     "元気ですか？",
