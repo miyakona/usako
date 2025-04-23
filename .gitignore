@@ -2,3 +2,4 @@
 test-results/
 .playwright/
 node_modules/
+.wrangler/
