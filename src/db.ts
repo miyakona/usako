@@ -5,6 +5,26 @@ import * as sqlite3 from "sqlite3";
 import { open, Database } from "sqlite";
 
 /**
+ * SQLiteデータベースを使用してクエリを実行する関数
+ * @param db SQLiteデータベース
+ * @param query SQLクエリ
+ * @param params クエリパラメータ
+ * @returns クエリ結果
+ */
+const executeQuery = async (
+  db: Database<sqlite3.Database>,
+  query: string,
+  params: any[] = []
+): Promise<any[]> => {
+  try {
+    return await db.all(query, params);
+  } catch (error) {
+    console.error("データベースクエリ実行エラー:", error);
+    return [];
+  }
+};
+
+/**
  * ローカル環境用のD1データベースを作成する関数
  * @returns D1データベースインターフェースの実装オブジェクト
  */
@@ -50,20 +70,18 @@ export const createD1Database = async (): Promise<D1Database> => {
     prepare: (query: string) => {
       return {
         all: async () => {
-          try {
-            if (query.includes("ORDER BY RANDOM() LIMIT 1")) {
-              const results = await db.all(
-                "SELECT message FROM messages ORDER BY RANDOM() LIMIT 1"
-              );
-              return { results };
-            }
+          let results: any[] = [];
 
-            const results = await db.all("SELECT message FROM messages");
-            return { results };
-          } catch (error) {
-            console.error("データベースクエリ実行エラー:", error);
-            return { results: [] };
+          if (query.includes("ORDER BY RANDOM() LIMIT 1")) {
+            results = await executeQuery(
+              db,
+              "SELECT message FROM messages ORDER BY RANDOM() LIMIT 1"
+            );
+          } else {
+            results = await executeQuery(db, "SELECT message FROM messages");
           }
+
+          return { results };
         },
       };
     },

@@ -47,6 +47,24 @@ export const handleGetRequest = (res: ServerResponse): void => {
 };
 
 /**
+ * LINEイベントからレスポンスを生成する共通関数
+ * @param body LINEリクエストボディ
+ * @param db D1データベース
+ * @returns LINE Messaging API形式のレスポンス
+ */
+export const processLineEvents = async (
+  body: LineRequestBody,
+  db: D1Database
+): Promise<LineResponseBody | Record<string, never>> => {
+  if (body.events && Array.isArray(body.events)) {
+    // replyTokenを取得（存在する場合）
+    const replyToken = body.events[0]?.replyToken || "dummy-token";
+    return await getRandomMessageFromDB(db, replyToken);
+  }
+  return {};
+};
+
+/**
  * POSTリクエストのデータを処理する関数
  * @param data リクエストボディ
  * @param db D1データベース
@@ -57,13 +75,9 @@ export const processPostRequestData = async (
   db: D1Database
 ): Promise<LineResponseBody | Record<string, never>> => {
   const body = safeJsonParse<LineRequestBody>(data);
-
-  if (body && body.events && Array.isArray(body.events)) {
-    // replyTokenを取得（存在する場合）
-    const replyToken = body.events[0]?.replyToken || "dummy-token";
-    return await getRandomMessageFromDB(db, replyToken);
+  if (body) {
+    return await processLineEvents(body, db);
   }
-
   return {};
 };
 
@@ -116,16 +130,16 @@ export const handleCloudflareRequest = async (
   if (request.method === "POST") {
     try {
       const body = (await request.json()) as LineRequestBody;
+      const responseData = await processLineEvents(body, env.DB);
 
-      if (body.events && Array.isArray(body.events)) {
-        // replyTokenを取得（存在する場合）
-        const replyToken = body.events[0]?.replyToken || "dummy-token";
-        const responseData = await getRandomMessageFromDB(env.DB, replyToken);
+      if (Object.keys(responseData).length > 0) {
         return new Response(JSON.stringify(responseData), {
           status: 200,
           headers: { "Content-Type": "application/json" },
         });
       }
+      // 処理結果がない場合は空レスポンス
+      return new Response("", { status: 200 });
     } catch (error) {
       console.error("Error handling POST request:", error);
       // エラーが発生しても200で返す（テスト仕様に合わせる）
