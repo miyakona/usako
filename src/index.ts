@@ -1,5 +1,6 @@
 import { startServer } from "./server";
 import { DEFAULT_PORT } from "./constants";
+import { info, error } from "./utils/logger";
 
 /**
  * アプリケーションのエントリーポイント
@@ -8,9 +9,9 @@ import { DEFAULT_PORT } from "./constants";
 async function main() {
   try {
     await startServer(DEFAULT_PORT);
-    console.log(`サーバーが起動しました: http://localhost:${DEFAULT_PORT}`);
-  } catch (error) {
-    console.error("サーバー起動エラー:", error);
+    info(`サーバーが起動しました: http://localhost:${DEFAULT_PORT}`);
+  } catch (err) {
+    error("サーバー起動エラー:", err);
     process.exit(1);
   }
 }

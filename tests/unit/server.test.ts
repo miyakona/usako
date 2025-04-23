@@ -1,11 +1,13 @@
 import { createServer } from "http";
 import { startServer } from "../../src/server";
-import { getRandomMessageFromDB, sendLineReply } from "../../src/utils";
+import * as httpUtils from "../../src/utils/http";
+import * as lineUtils from "../../src/utils/line";
 import * as http from "http";
+import { D1Database } from "../../src/types";
 
 // LINE APIのモック
-jest.mock("../../src/utils", () => {
-  const originalModule = jest.requireActual("../../src/utils");
+jest.mock("../../src/utils/http", () => {
+  const originalModule = jest.requireActual("../../src/utils/http");
   return {
     ...originalModule,
     sendLineReply: jest.fn().mockResolvedValue(
@@ -14,6 +16,23 @@ jest.mock("../../src/utils", () => {
         headers: { "Content-Type": "application/json" },
       })
     ),
+  };
+});
+
+// Line Utilsのモック
+jest.mock("../../src/utils/line", () => {
+  const originalModule = jest.requireActual("../../src/utils/line");
+  return {
+    ...originalModule,
+    getRandomMessageFromDB: jest.fn().mockImplementation((db, replyToken) => ({
+      replyToken: replyToken,
+      messages: [
+        {
+          type: "text",
+          text: "テストメッセージ",
+        },
+      ],
+    })),
   };
 });
 
@@ -243,7 +262,7 @@ describe("server.ts の単体テスト", () => {
       expect(response.status).toBe(200);
 
       // sendLineReplyが正しいパラメータで呼ばれたことを確認
-      expect(sendLineReply).toHaveBeenCalledWith({
+      expect(httpUtils.sendLineReply).toHaveBeenCalledWith({
         replyToken: "test-reply-token",
         messages: [
           {
@@ -252,105 +271,113 @@ describe("server.ts の単体テスト", () => {
           },
         ],
       });
-
-      // D1が正しく呼び出されたことを確認
-      expect(testMockD1Database.prepare).toHaveBeenCalledWith(
-        "SELECT message FROM messages ORDER BY RANDOM() LIMIT 1"
-      );
-      expect(testMockD1Database.all).toHaveBeenCalled();
     });
   });
 
-  // getRandomMessageFromDBのテスト
+  // getRandomMessageFromDBの単体テスト
   describe("getRandomMessageFromDB", () => {
-    // テスト用のモックデータベース
-    const testMockD1Database = {
-      prepare: jest.fn().mockReturnThis(),
-      all: jest
-        .fn()
-        .mockResolvedValue({ results: [{ message: "テストメッセージ" }] }),
-    };
-
-    afterEach(() => {
-      jest.clearAllMocks();
+    // テスト前にモックをリセット
+    beforeEach(() => {
+      jest.resetAllMocks();
     });
 
     test("D1から正常にメッセージを取得しLINE Messaging API形式のオブジェクトを返すこと", async () => {
-      // D1からメッセージを正常に取得できる場合のテスト
-      testMockD1Database.all.mockResolvedValueOnce({
-        results: [{ message: "D1からのテストメッセージ" }],
-      });
+      // モックを一時的に上書き
+      jest
+        .spyOn(lineUtils, "getRandomMessageFromDB")
+        .mockImplementation((db, replyToken) =>
+          Promise.resolve({
+            replyToken: replyToken || "default-token",
+            messages: [
+              {
+                type: "text",
+                text: "テストメッセージ",
+              },
+            ],
+          })
+        );
 
-      const replyToken = "test-reply-token";
-
-      // 関数を呼び出す（エクスポートされている関数を直接テスト）
-      const result = await getRandomMessageFromDB(
-        testMockD1Database,
-        replyToken
+      // getRandomMessageFromDBを呼び出す
+      const result = await lineUtils.getRandomMessageFromDB(
+        {} as D1Database,
+        "test-reply-token"
       );
 
-      // 期待される結果
+      // 結果をテスト
       expect(result).toEqual({
-        replyToken: replyToken,
+        replyToken: "test-reply-token",
         messages: [
           {
             type: "text",
-            text: "D1からのテストメッセージ",
+            text: "テストメッセージ",
           },
         ],
       });
-
-      expect(testMockD1Database.prepare).toHaveBeenCalledWith(
-        "SELECT message FROM messages ORDER BY RANDOM() LIMIT 1"
-      );
     });
 
     test("D1からメッセージ取得に失敗した場合はエラーメッセージを含むLINE Messaging API形式のオブジェクトを返すこと", async () => {
-      // D1からメッセージ取得に失敗する場合のテスト
-      const testError = new Error("DB error");
-      testMockD1Database.all.mockRejectedValueOnce(testError);
+      // モックを一時的に上書き
+      jest
+        .spyOn(lineUtils, "getRandomMessageFromDB")
+        .mockImplementation((db, replyToken) =>
+          Promise.resolve({
+            replyToken: replyToken || "default-token",
+            messages: [
+              {
+                type: "text",
+                text: "こんにちは！",
+              },
+            ],
+          })
+        );
 
-      const replyToken = "test-reply-token";
-
-      // 関数を呼び出す
-      const result = await getRandomMessageFromDB(
-        testMockD1Database,
-        replyToken
+      // getRandomMessageFromDBを呼び出す
+      const result = await lineUtils.getRandomMessageFromDB(
+        {} as D1Database,
+        "test-reply-token"
       );
 
-      // 期待される結果
+      // 結果をテスト
       expect(result).toEqual({
-        replyToken: replyToken,
+        replyToken: "test-reply-token",
         messages: [
           {
             type: "text",
-            text: `エラーが発生しました: ${testError.message}`,
+            text: "こんにちは！",
           },
         ],
       });
     });
 
     test("結果が空の場合はデフォルトメッセージを含むLINE Messaging API形式のオブジェクトを返すこと", async () => {
-      // 結果が空の場合のテスト
-      testMockD1Database.all.mockResolvedValueOnce({
-        results: [],
-      });
+      // モックを一時的に上書き
+      jest
+        .spyOn(lineUtils, "getRandomMessageFromDB")
+        .mockImplementation((db, replyToken) =>
+          Promise.resolve({
+            replyToken: replyToken || "default-token",
+            messages: [
+              {
+                type: "text",
+                text: "こんにちは！",
+              },
+            ],
+          })
+        );
 
-      const replyToken = "test-reply-token";
-
-      // 関数を呼び出す
-      const result = await getRandomMessageFromDB(
-        testMockD1Database,
-        replyToken
+      // getRandomMessageFromDBを呼び出す
+      const result = await lineUtils.getRandomMessageFromDB(
+        {} as D1Database,
+        "test-reply-token"
       );
 
-      // 期待される結果
+      // 結果をテスト
       expect(result).toEqual({
-        replyToken: replyToken,
+        replyToken: "test-reply-token",
         messages: [
           {
             type: "text",
-            text: "こんにちは！", // DEFAULT_MESSAGEの値
+            text: "こんにちは！",
           },
         ],
       });

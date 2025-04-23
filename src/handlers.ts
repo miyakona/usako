@@ -1,16 +1,14 @@
 import { IncomingMessage, ServerResponse } from "http";
 import { Env, D1Database, LineRequestBody, LineResponseBody } from "./types";
+import { CONTENT_TYPE, LINE } from "./constants";
 import {
-  getRandomMessageFromDB,
-  formatErrorMessage,
-  createLineResponse,
-  safeJsonParse,
   sendResponse,
   createCloudflareResponse,
-  safeOperation,
   sendLineReply,
-} from "./utils";
-import { CONTENT_TYPE, ERROR, LINE } from "./constants";
+} from "./utils/http";
+import { logRequest, debug, info, error } from "./utils/logger";
+import { safeOperation } from "./utils/error";
+import * as lineUtils from "./utils/line";
 
 /**
  * GETリクエストのハンドラー
@@ -18,85 +16,6 @@ import { CONTENT_TYPE, ERROR, LINE } from "./constants";
  */
 export const handleGetRequest = (res: ServerResponse): void => {
   sendResponse(res, 200, "Hello World!", CONTENT_TYPE.TEXT);
-};
-
-// ログ出力用のヘルパー関数
-const logRequest = (
-  method: string,
-  url: string,
-  headers: Headers,
-  body?: any
-): void => {
-  console.log(`[REQUEST] ${method} ${url}`);
-  console.log(
-    `[HEADERS] ${JSON.stringify(Object.fromEntries(headers.entries()))}`
-  );
-  if (body) {
-    console.log(
-      `[BODY] ${typeof body === "string" ? body : JSON.stringify(body)}`
-    );
-  }
-};
-
-/**
- * LINEイベントからレスポンスを生成する共通関数
- * @param body LINEリクエストボディ
- * @param db D1データベース
- * @returns LINE Messaging API形式のレスポンス
- */
-export const processLineEvents = async (
-  body: LineRequestBody,
-  db: D1Database
-): Promise<LineResponseBody | Record<string, never>> => {
-  if (body.events && Array.isArray(body.events) && body.events.length > 0) {
-    // replyTokenを取得（存在する場合）
-    const event = body.events[0];
-    const replyToken = event.replyToken || LINE.DUMMY_TOKEN;
-
-    // イベントがメッセージの場合
-    if (event.type === "message" && event.message?.type === "text") {
-      console.log(`[MESSAGE] Received: ${event.message.text}`);
-
-      // デフォルトの応答メッセージ
-      const defaultMessage = "何かお手伝いできることはありますか？";
-
-      return createLineResponse(defaultMessage, replyToken);
-    }
-
-    // その他のイベントではデータベースからランダムメッセージを取得
-    return await getRandomMessageFromDB(db, replyToken);
-  }
-  return {};
-};
-
-/**
- * POSTリクエストのデータを安全に処理する共通関数
- * @param body LINEリクエストボディまたは文字列
- * @param db D1データベース
- * @returns 処理結果のJSONオブジェクト
- */
-export const safeProcessLineEvents = async (
-  body: LineRequestBody | string,
-  db: D1Database
-): Promise<LineResponseBody | Record<string, never>> => {
-  // bodyのログ出力
-  console.log(
-    `[LINE REQUEST] ${typeof body === "string" ? body : JSON.stringify(body)}`
-  );
-
-  return await safeOperation(
-    async () => {
-      const parsedBody =
-        typeof body === "string" ? safeJsonParse<LineRequestBody>(body) : body;
-
-      if (parsedBody) {
-        return await processLineEvents(parsedBody, db);
-      }
-      return {};
-    },
-    {},
-    ERROR.PROCESSING_LINE_EVENTS
-  );
 };
 
 /**
@@ -118,14 +37,12 @@ export const handlePostRequest = (
 
   req.on("end", async () => {
     // リクエストのログ出力
-    console.log(`[POST REQUEST] ${req.url}`);
-    console.log(`[POST HEADERS] ${JSON.stringify(req.headers)}`);
-    console.log(`[POST BODY] ${data}`);
+    logRequest(req.method || "POST", req.url || "/", req.headers, data);
 
     const responseMessage = await safeOperation(
-      async () => await safeProcessLineEvents(data, db),
+      async () => await lineUtils.safeProcessLineEvents(data, db),
       {},
-      ERROR.POST_REQUEST
+      "POSTリクエスト処理中にエラーが発生しました"
     );
 
     const hasContent = Object.keys(responseMessage).length > 0;
@@ -158,26 +75,25 @@ export const handleCloudflareRequest = async (
           // リクエストボディをクローンして取得（JSONとしてパースする前にログ出力用）
           const clonedRequest = request.clone();
           const rawBody = await clonedRequest.text();
-          console.log(`[RAW REQUEST BODY] ${rawBody}`);
+          debug("Raw request body", rawBody);
 
           // 元のリクエストからJSONを取得
-          const body = await request.json();
+          const body = (await request.json()) as LineRequestBody;
 
           // パース済みボディもログ出力
-          console.log(`[PARSED REQUEST BODY] ${JSON.stringify(body)}`);
+          debug("Parsed request body", body);
 
           // LINE.CHANNEL_ACCESS_TOKENに環境変数の値を設定
           LINE.CHANNEL_ACCESS_TOKEN = env.LINE_CHANNEL_ACCESS_TOKEN;
 
-          const responseData = await safeProcessLineEvents(body, env.DB);
+          const responseData = await lineUtils.safeProcessLineEvents(
+            body,
+            env.DB
+          );
           const hasContent = Object.keys(responseData).length > 0;
 
           // レスポンスのログ出力
-          console.log(
-            `[RESPONSE] ${
-              hasContent ? JSON.stringify(responseData) : "Empty response"
-            }`
-          );
+          debug("Response data", hasContent ? responseData : "Empty response");
 
           // 実際にLINE APIに返信を送信
           if (
@@ -188,24 +104,24 @@ export const handleCloudflareRequest = async (
             const lineApiResponse = await sendLineReply(
               responseData as LineResponseBody
             );
-            console.log(
-              `[LINE API CALL] Complete with status: ${lineApiResponse.status}`
+            info(
+              `LINE API call complete with status: ${lineApiResponse.status}`
             );
           }
 
           // Webhookには常に200 OKを返す（LINE APIの仕様）
           return createCloudflareResponse(200, "");
-        } catch (error) {
-          console.error(`[ERROR] Failed to process request: ${error}`);
+        } catch (err) {
+          error("Failed to process request", err);
           return createCloudflareResponse(200, "");
         }
       },
       createCloudflareResponse(200, ""),
-      ERROR.CLOUDFLARE_REQUEST
+      "Cloudflareリクエスト処理中にエラーが発生しました"
     );
   }
 
   // GETリクエストの応答
-  console.log("[RESPONSE] Hello World!");
+  info("Handling GET request");
   return createCloudflareResponse(200, "Hello World!", CONTENT_TYPE.TEXT);
 };

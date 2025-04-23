@@ -20,7 +20,9 @@
     "e2e": "cucumber-js tests/e2e/features --require-module ts-node/register --require tests/e2e/step_definitions/**/*.ts --require tests/e2e/support/**/*.ts",
     "test:unit": "jest tests/unit",
     "test:all": "npm run test:unit && npm run e2e",
-    "test": "npm run test:all"
+    "test": "npm run test:all",
+    "lint": "tsc --noEmit",
+    "lint:fix": "tsc --noEmit && echo 'Type checking complete'"
   },
   "dependencies": {
     "express": "^5.1.0",

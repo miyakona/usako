@@ -12,7 +12,8 @@ import {
   handleCloudflareRequest,
 } from "./handlers";
 import { createD1Database } from "./db";
-import { sendResponse } from "./utils";
+import { sendResponse } from "./utils/http";
+import { info, error, warn, debug } from "./utils/logger";
 
 /**
  * リクエストハンドラーの型定義
@@ -25,21 +26,15 @@ type RequestHandler = (req: IncomingMessage, res: ServerResponse) => void;
 const server = {
   async fetch(request: Request, env: Env, ctx: any) {
     // リクエスト情報を詳細にログ出力
-    console.log(
-      `[WORKER] Received ${request.method} request to ${request.url}`
-    );
-    console.log(
-      `[WORKER] Request headers: ${JSON.stringify(
-        Object.fromEntries(request.headers.entries())
-      )}`
-    );
+    info(`Received ${request.method} request to ${request.url}`);
+    debug(`Request headers:`, Object.fromEntries(request.headers.entries()));
 
     try {
       const response = await handleCloudflareRequest(request, env);
-      console.log(`[WORKER] Response status: ${response.status}`);
+      info(`Response status: ${response.status}`);
       return response;
-    } catch (error) {
-      console.error(`[WORKER] Error handling request: ${error}`);
+    } catch (err) {
+      error(`Error handling request:`, err);
       return new Response("Internal Server Error", { status: 500 });
     }
   },
@@ -73,8 +68,8 @@ export const createRequestRouter = (db: D1Database): RequestHandler => {
           // サポートされていないメソッドには405を返す
           handleMethodNotAllowed(res);
       }
-    } catch (error) {
-      console.error("Error in request router:", error);
+    } catch (err) {
+      error("Error in request router:", err);
       // 内部エラーでも200を返す（テスト仕様に合わせる）
       sendResponse(res, 200, "");
     }
@@ -95,13 +90,9 @@ export async function startServer(port = DEFAULT_PORT): Promise<HttpServer> {
     // 環境変数からトークンを読み込む
     if (process.env.LINE_CHANNEL_ACCESS_TOKEN) {
       LINE.CHANNEL_ACCESS_TOKEN = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-      console.log(
-        "LINE_CHANNEL_ACCESS_TOKEN loaded from environment variables"
-      );
+      info("LINE_CHANNEL_ACCESS_TOKEN loaded from environment variables");
     } else {
-      console.warn(
-        "LINE_CHANNEL_ACCESS_TOKEN is not set in environment variables"
-      );
+      warn("LINE_CHANNEL_ACCESS_TOKEN is not set in environment variables");
     }
 
     // リクエストハンドラーを作成
@@ -111,13 +102,13 @@ export async function startServer(port = DEFAULT_PORT): Promise<HttpServer> {
     const httpServer = createServer(requestHandler);
 
     httpServer.listen(port, () => {
-      console.log(`Server is running on http://localhost:${port}`);
+      info(`Server is running on http://localhost:${port}`);
     });
 
     return httpServer;
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    throw error;
+  } catch (err) {
+    error("Failed to start server:", err);
+    throw err;
   }
 }
 
