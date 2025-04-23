@@ -8,6 +8,7 @@ alwaysApply: false
 - tests/*
 
 # 守ってほしいこと
+- [basic.mdc](mdc:.cursor/rules/basic.mdc) に従ってください
 - 単体テスト、 e2e テストの pass を維持したまま、リファクタリングを行ってください。
 - 機能の追加はしないで。
 - 必ず、全ての単体テストと e2e テストが pass することを確認してください。

@@ -1,0 +1,13 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# e2e テスト
+- tests/e2e/features/* にあるシナリオは変更しないでください
+
+# 単体テスト
+- 単体テストでは、モックを使用しないでください
+
+# 守ってほしいこと
+- [basic.mdc](mdc:.cursor/rules/basic.mdc) に従ってください
