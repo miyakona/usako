@@ -2,6 +2,30 @@
 
 LINE Messaging APIを利用したボットアプリケーション
 
+## 環境設定
+
+このアプリケーションを実行するには、以下の環境変数を設定する必要があります：
+
+```bash
+# .env または .dev.vars ファイルを作成し、以下の変数を設定
+DATABASE_ID=your_cloudflare_d1_database_id
+```
+
+開発用に `wrangler.dev.jsonc` ファイルを作成することもできます：
+
+```bash
+# wrangler.example.jsonc をコピーして wrangler.dev.jsonc を作成
+cp wrangler.example.jsonc wrangler.dev.jsonc
+# エディタで開いて実際の値を設定
+```
+
+本番環境では、Cloudflare Dashboard または Wrangler CLI でシークレットを設定します：
+
+```bash
+# Cloudflare Workers のシークレットを設定
+npx wrangler secret put DATABASE_ID
+```
+
 ## デプロイ方法
 
 以下のコマンドでデプロイします：

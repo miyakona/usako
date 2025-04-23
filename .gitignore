@@ -3,3 +3,7 @@ test-results/
 .playwright/
 node_modules/
 .wrangler/
+.env
+.env.local
+.dev.vars
+wrangler.dev.jsonc

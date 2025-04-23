@@ -1,0 +1,6 @@
+# Cloudflare D1 データベースID
+DATABASE_ID=your_cloudflare_d1_database_id_here
+
+# その他必要な環境変数があれば追加
+# LINE_CHANNEL_SECRET=your_line_channel_secret
+# LINE_CHANNEL_ACCESS_TOKEN=your_line_access_token 
