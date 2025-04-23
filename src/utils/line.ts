@@ -61,9 +61,9 @@ export const processLineEvents = async (
     if (event.type === "message" && event.message?.type === "text") {
       logger.info(`Received message: ${event.message.text}`);
 
-      // デフォルトの応答メッセージ
-      const defaultMessage = "何かお手伝いできることはありますか？";
-      return createLineResponse(defaultMessage, replyToken);
+      // DBからランダムなメッセージを取得して応答
+      logger.info("Getting random message from DB for message event");
+      return await getRandomMessageFromDB(db, replyToken);
     }
 
     // その他のイベントではデータベースからランダムメッセージを取得
