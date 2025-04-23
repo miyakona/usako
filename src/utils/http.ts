@@ -110,6 +110,7 @@ export const sendLineReply = async (
         );
       }
 
+      logger.info(`LINE API call complete with status: ${response.status}`);
       return response;
     } else {
       logger.info("Skipping LINE reply with dummy token");

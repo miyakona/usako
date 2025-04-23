@@ -22,6 +22,20 @@ export const safeOperation = async <T>(
 };
 
 /**
+ * JSONを安全にパースする関数
+ * @param data パースする文字列
+ * @returns パース結果またはnull
+ */
+export const safeJsonParse = <T>(data: string): T | null => {
+  try {
+    return JSON.parse(data) as T;
+  } catch (error) {
+    logger.error(ERROR.PARSING_JSON, error);
+    return null;
+  }
+};
+
+/**
  * エラーメッセージをフォーマットする関数
  * @param error エラーオブジェクト
  * @returns フォーマットされたエラーメッセージ
