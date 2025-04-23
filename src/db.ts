@@ -1,42 +1,69 @@
 import { D1Database } from "./types";
-import { RANDOM_MESSAGES } from "./constants";
+import * as fs from "fs";
+import * as path from "path";
+import * as sqlite3 from "sqlite3";
+import { open, Database } from "sqlite";
 
 /**
  * ローカル環境用のD1データベースを作成する関数
  * @returns D1データベースインターフェースの実装オブジェクト
  */
-export const createD1Database = (): D1Database => {
-  // モックデータとしてメモリ内のメッセージ配列を使用
-  const messages = [...RANDOM_MESSAGES];
+export const createD1Database = async (): Promise<D1Database> => {
+  // データベースディレクトリの作成（存在しない場合）
+  const dbDir = path.join(process.cwd(), ".wrangler", "local");
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
 
-  /**
-   * ランダムメッセージクエリを処理する関数
-   * @returns ランダムに選ばれたメッセージ
-   */
-  const handleRandomMessageQuery = () => {
-    const randomIndex = Math.floor(Math.random() * messages.length);
-    return { results: [{ message: messages[randomIndex] }] };
-  };
+  // データベースファイルのパス
+  const dbPath = path.join(dbDir, "usako-messages.sqlite");
 
-  /**
-   * 全メッセージクエリを処理する関数
-   * @returns すべてのメッセージ
-   */
-  const handleAllMessagesQuery = () => {
-    return { results: messages.map((message) => ({ message })) };
-  };
+  // SQLiteデータベースを開く（なければ作成）
+  const db = await open({
+    filename: dbPath,
+    driver: sqlite3.Database,
+  });
 
+  // テーブルが存在しない場合は作成し、初期データを挿入
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      message TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // データが存在しない場合のみ初期データを挿入
+  const count = await db.get("SELECT COUNT(*) as count FROM messages");
+  if (count.count === 0) {
+    await db.exec(`
+      INSERT INTO messages (message) VALUES ('こんにちは！');
+      INSERT INTO messages (message) VALUES ('元気ですか？');
+      INSERT INTO messages (message) VALUES ('何かお手伝いできることはありますか？');
+      INSERT INTO messages (message) VALUES ('素敵な一日をお過ごしください');
+      INSERT INTO messages (message) VALUES ('うさこだよ！');
+    `);
+  }
+
+  // D1データベースインターフェースに合わせた実装を返す
   return {
     prepare: (query: string) => {
       return {
         all: async () => {
-          // クエリパターンに基づいて処理を分岐
-          if (query.includes("ORDER BY RANDOM() LIMIT 1")) {
-            return handleRandomMessageQuery();
-          }
+          try {
+            if (query.includes("ORDER BY RANDOM() LIMIT 1")) {
+              const results = await db.all(
+                "SELECT message FROM messages ORDER BY RANDOM() LIMIT 1"
+              );
+              return { results };
+            }
 
-          // デフォルトでは全てのメッセージを返す
-          return handleAllMessagesQuery();
+            const results = await db.all("SELECT message FROM messages");
+            return { results };
+          } catch (error) {
+            console.error("データベースクエリ実行エラー:", error);
+            return { results: [] };
+          }
         },
       };
     },

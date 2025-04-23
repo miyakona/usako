@@ -3,13 +3,16 @@ import { startServer } from "../../src/server";
 import { getRandomMessageFromDB } from "../../src/utils";
 import * as http from "http";
 
-// getRandomMessageFromDB関数と環境変数用のモック
-const mockD1Database = {
-  prepare: jest.fn().mockReturnThis(),
-  all: jest
-    .fn()
-    .mockResolvedValue({ results: [{ message: "テストメッセージ" }] }),
-};
+// D1データベースのモック - SQLiteを使わずにテスト用の実装を提供
+jest.mock("../../src/db", () => ({
+  createD1Database: jest.fn().mockResolvedValue({
+    prepare: jest.fn().mockImplementation((query) => ({
+      all: jest.fn().mockResolvedValue({
+        results: [{ message: "テストメッセージ" }],
+      }),
+    })),
+  }),
+}));
 
 // httpサーバーのモック
 jest.mock("http", () => ({
@@ -29,8 +32,8 @@ describe("server.ts の単体テスト", () => {
   });
 
   describe("startServer", () => {
-    test("HTTPサーバーを起動すること", () => {
-      const server = startServer(8789);
+    test("HTTPサーバーを起動すること", async () => {
+      const server = await startServer(8789);
 
       // createServerが呼ばれたことを確認
       expect(createServer).toHaveBeenCalled();
@@ -43,8 +46,8 @@ describe("server.ts の単体テスト", () => {
       );
     });
 
-    test("GETリクエストに対して「Hello World!」を返すこと", () => {
-      const server = startServer(8790);
+    test("GETリクエストに対して「Hello World!」を返すこと", async () => {
+      const server = await startServer(8790);
 
       // リクエストハンドラーを取得
       const requestHandler = (createServer as jest.Mock).mock.calls[0][0];
@@ -72,7 +75,7 @@ describe("server.ts の単体テスト", () => {
 
     test("POSTリクエストに対してD1からのメッセージを返すこと", async () => {
       // startServerをテスト
-      const server = startServer(8788);
+      const server = await startServer(8788);
 
       // createServerが呼ばれたことを確認
       expect(createServer).toHaveBeenCalled();
@@ -120,7 +123,7 @@ describe("server.ts の単体テスト", () => {
     });
 
     test("不正なPOSTリクエストに対して200を返すこと", async () => {
-      const server = startServer(8791);
+      const server = await startServer(8791);
 
       // リクエストハンドラーを取得
       const requestHandler = (createServer as jest.Mock).mock.calls[0][0];
@@ -163,6 +166,13 @@ describe("server.ts の単体テスト", () => {
   // Cloudflare Workersのserverオブジェクト用のテスト
   describe("server.fetch", () => {
     // このテストではCloudflare Workers環境を模倣
+    // getRandomMessageFromDB関数と環境変数用のモック
+    const testMockD1Database = {
+      prepare: jest.fn().mockReturnThis(),
+      all: jest
+        .fn()
+        .mockResolvedValue({ results: [{ message: "テストメッセージ" }] }),
+    };
 
     test("GETリクエストに対して「Hello World!」を返すこと", async () => {
       // テスト対象のモジュールを動的にインポート
@@ -175,7 +185,7 @@ describe("server.ts の単体テスト", () => {
       });
 
       const mockEnv = {
-        DB: mockD1Database,
+        DB: testMockD1Database,
       };
 
       // fetchを呼び出す
@@ -207,7 +217,7 @@ describe("server.ts の単体テスト", () => {
       });
 
       const mockEnv = {
-        DB: mockD1Database,
+        DB: testMockD1Database,
       };
 
       // fetchを呼び出す
@@ -228,25 +238,40 @@ describe("server.ts の単体テスト", () => {
       });
 
       // D1が正しく呼び出されたことを確認
-      expect(mockD1Database.prepare).toHaveBeenCalledWith(
+      expect(testMockD1Database.prepare).toHaveBeenCalledWith(
         "SELECT message FROM messages ORDER BY RANDOM() LIMIT 1"
       );
-      expect(mockD1Database.all).toHaveBeenCalled();
+      expect(testMockD1Database.all).toHaveBeenCalled();
     });
   });
 
   // getRandomMessageFromDBのテスト
   describe("getRandomMessageFromDB", () => {
+    // テスト用のモックデータベース
+    const testMockD1Database = {
+      prepare: jest.fn().mockReturnThis(),
+      all: jest
+        .fn()
+        .mockResolvedValue({ results: [{ message: "テストメッセージ" }] }),
+    };
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
     test("D1から正常にメッセージを取得しLINE Messaging API形式のオブジェクトを返すこと", async () => {
       // D1からメッセージを正常に取得できる場合のテスト
-      mockD1Database.all.mockResolvedValueOnce({
+      testMockD1Database.all.mockResolvedValueOnce({
         results: [{ message: "D1からのテストメッセージ" }],
       });
 
       const replyToken = "test-reply-token";
 
       // 関数を呼び出す（エクスポートされている関数を直接テスト）
-      const result = await getRandomMessageFromDB(mockD1Database, replyToken);
+      const result = await getRandomMessageFromDB(
+        testMockD1Database,
+        replyToken
+      );
 
       // 期待される結果
       expect(result).toEqual({
@@ -259,7 +284,7 @@ describe("server.ts の単体テスト", () => {
         ],
       });
 
-      expect(mockD1Database.prepare).toHaveBeenCalledWith(
+      expect(testMockD1Database.prepare).toHaveBeenCalledWith(
         "SELECT message FROM messages ORDER BY RANDOM() LIMIT 1"
       );
     });
@@ -267,12 +292,15 @@ describe("server.ts の単体テスト", () => {
     test("D1からメッセージ取得に失敗した場合はエラーメッセージを含むLINE Messaging API形式のオブジェクトを返すこと", async () => {
       // D1からメッセージ取得に失敗する場合のテスト
       const testError = new Error("DB error");
-      mockD1Database.all.mockRejectedValueOnce(testError);
+      testMockD1Database.all.mockRejectedValueOnce(testError);
 
       const replyToken = "test-reply-token";
 
       // 関数を呼び出す
-      const result = await getRandomMessageFromDB(mockD1Database, replyToken);
+      const result = await getRandomMessageFromDB(
+        testMockD1Database,
+        replyToken
+      );
 
       // 期待される結果
       expect(result).toEqual({
@@ -288,14 +316,17 @@ describe("server.ts の単体テスト", () => {
 
     test("結果が空の場合はデフォルトメッセージを含むLINE Messaging API形式のオブジェクトを返すこと", async () => {
       // 結果が空の場合のテスト
-      mockD1Database.all.mockResolvedValueOnce({
+      testMockD1Database.all.mockResolvedValueOnce({
         results: [],
       });
 
       const replyToken = "test-reply-token";
 
       // 関数を呼び出す
-      const result = await getRandomMessageFromDB(mockD1Database, replyToken);
+      const result = await getRandomMessageFromDB(
+        testMockD1Database,
+        replyToken
+      );
 
       // 期待される結果
       expect(result).toEqual({

@@ -60,9 +60,9 @@ export const createRequestRouter = (db: D1Database): RequestHandler => {
  * @param port 使用するポート番号
  * @returns HTTPサーバーインスタンス
  */
-export function startServer(port = DEFAULT_PORT): HttpServer {
+export async function startServer(port = DEFAULT_PORT): Promise<HttpServer> {
   // ローカル環境用のD1データベースを初期化
-  const db = createD1Database();
+  const db = await createD1Database();
 
   // リクエストハンドラーを作成
   const requestHandler = createRequestRouter(db);
