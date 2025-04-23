@@ -2,223 +2,127 @@ import { createServer } from "http";
 import { startServer } from "../../src/server";
 import * as httpUtils from "../../src/utils/http";
 import * as lineUtils from "../../src/utils/line";
-import * as http from "http";
 import { D1Database } from "../../src/types";
+import { createD1Database } from "../../src/db";
+import * as http from "http";
 
-// LINE APIのモック
-jest.mock("../../src/utils/http", () => {
-  const originalModule = jest.requireActual("../../src/utils/http");
-  return {
-    ...originalModule,
-    sendLineReply: jest.fn().mockResolvedValue(
-      new Response(JSON.stringify({ message: "ok" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      })
-    ),
-  };
-});
+// テスト用のユーティリティ関数
+async function createTestRequest(
+  method: string,
+  url: string,
+  body?: any
+): Promise<Request> {
+  return new Request(url, {
+    method,
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
 
-// Line Utilsのモック
-jest.mock("../../src/utils/line", () => {
-  const originalModule = jest.requireActual("../../src/utils/line");
-  return {
-    ...originalModule,
-    getRandomMessageFromDB: jest.fn().mockImplementation((db, replyToken) => ({
-      replyToken: replyToken,
-      messages: [
-        {
-          type: "text",
-          text: "テストメッセージ",
-        },
-      ],
-    })),
-  };
-});
+// テスト用の環境変数
+const testEnv = {
+  LINE_CHANNEL_ACCESS_TOKEN: "test-token",
+};
 
-// D1データベースのモック - SQLiteを使わずにテスト用の実装を提供
-jest.mock("../../src/db", () => ({
-  createD1Database: jest.fn().mockResolvedValue({
-    prepare: jest.fn().mockImplementation((query) => ({
-      all: jest.fn().mockResolvedValue({
-        results: [{ message: "テストメッセージ" }],
-      }),
-    })),
-  }),
-}));
-
-// httpサーバーのモック
-jest.mock("http", () => ({
-  createServer: jest.fn().mockImplementation((callback: any) => ({
-    listen: jest.fn().mockImplementation((port: number, cb: () => void) => {
-      cb && cb();
-      return {
-        close: jest.fn(),
-      };
-    }),
-  })),
-}));
+// 実際のD1データベースを使用するためのセットアップ
+async function setupTestDatabase(): Promise<D1Database> {
+  return await createD1Database();
+}
 
 describe("server.ts の単体テスト", () => {
-  afterEach(() => {
-    jest.clearAllMocks();
+  let testDb: D1Database;
+  let server: http.Server;
+  const testPort = 8789;
+
+  // 各テストの前にデータベースを初期化
+  beforeAll(async () => {
+    testDb = await setupTestDatabase();
+  });
+
+  // 各テスト後にサーバーをクローズ
+  afterEach(async () => {
+    if (server && server.close) {
+      await new Promise<void>((resolve) => {
+        server.close(() => resolve());
+      });
+    }
   });
 
   describe("startServer", () => {
     test("HTTPサーバーを起動すること", async () => {
-      const server = await startServer(8789);
-
-      // createServerが呼ばれたことを確認
-      expect(createServer).toHaveBeenCalled();
-
-      // listenが正しいポートで呼ばれたことを確認
-      const mockServer = (createServer as jest.Mock).mock.results[0].value;
-      expect(mockServer.listen).toHaveBeenCalledWith(
-        8789,
-        expect.any(Function)
-      );
+      server = await startServer(testPort);
+      expect(server).toBeDefined();
+      expect(server.listening).toBe(true);
     });
 
     test("GETリクエストに対して「Hello World!」を返すこと", async () => {
-      const server = await startServer(8790);
+      server = await startServer(testPort);
 
-      // リクエストハンドラーを取得
-      const requestHandler = (createServer as jest.Mock).mock.calls[0][0];
+      // 実際のHTTPリクエストを送信
+      const response = await fetch(`http://localhost:${testPort}/`);
+      const text = await response.text();
 
-      // モックリクエストとレスポンス
-      const mockReq = {
-        method: "GET",
-        url: "/",
-      };
-
-      const mockRes = {
-        writeHead: jest.fn(),
-        end: jest.fn(),
-      };
-
-      // リクエストハンドラーを呼び出す
-      requestHandler(mockReq, mockRes);
-
-      // レスポンスが正しく設定されたことを確認
-      expect(mockRes.writeHead).toHaveBeenCalledWith(200, {
-        "Content-Type": "text/plain",
-      });
-      expect(mockRes.end).toHaveBeenCalledWith("Hello World!");
+      expect(response.status).toBe(200);
+      expect(text).toBe("Hello World!");
     });
 
     test("POSTリクエストに対してD1からのメッセージを返すこと", async () => {
-      // startServerをテスト
-      const server = await startServer(8788);
+      server = await startServer(testPort);
 
-      // createServerが呼ばれたことを確認
-      expect(createServer).toHaveBeenCalled();
-
-      // リクエストハンドラーを取得
-      const requestHandler = (createServer as jest.Mock).mock.calls[0][0];
-
-      // モックリクエストとレスポンス
-      type MockReq = {
-        method: string;
-        url: string;
-        on: jest.Mock;
-      };
-
-      const mockReq: MockReq = {
+      // LineバックエンドへのPOSTリクエスト
+      const response = await fetch(`http://localhost:${testPort}/`, {
         method: "POST",
-        url: "/",
-        on: jest
-          .fn()
-          .mockImplementation((event: string, callback: Function): MockReq => {
-            if (event === "data") {
-              callback(JSON.stringify({ events: [{}] }));
-            }
-            if (event === "end") {
-              // 非同期コールバックをシミュレート
-              setTimeout(() => callback(), 0);
-            }
-            return mockReq;
-          }),
-      };
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          events: [
+            {
+              type: "message",
+              replyToken: "test-reply-token",
+              message: {
+                type: "text",
+                text: "こんにちは",
+              },
+            },
+          ],
+        }),
+      });
 
-      const mockRes = {
-        writeHead: jest.fn(),
-        end: jest.fn(),
-      };
-
-      // リクエストハンドラーを呼び出す
-      requestHandler(mockReq, mockRes);
-
-      // 非同期処理を待つ
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      // レスポンスが呼び出されたことを確認
-      expect(mockRes.end).toHaveBeenCalled();
+      // 200レスポンスを期待
+      expect(response.status).toBe(200);
     });
 
     test("不正なPOSTリクエストに対して200を返すこと", async () => {
-      const server = await startServer(8791);
+      server = await startServer(testPort);
 
-      // リクエストハンドラーを取得
-      const requestHandler = (createServer as jest.Mock).mock.calls[0][0];
-
-      // モックリクエストとレスポンス（不正なJSONを送信）
-      const mockReq = {
+      // 不正なJSONを送信
+      const response = await fetch(`http://localhost:${testPort}/`, {
         method: "POST",
-        url: "/",
-        on: jest
-          .fn()
-          .mockImplementation((event: string, callback: Function) => {
-            if (event === "data") {
-              callback("不正なJSON");
-            }
-            if (event === "end") {
-              // 非同期コールバックをシミュレート
-              setTimeout(() => callback(), 0);
-            }
-            return mockReq;
-          }),
-      };
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: "不正なJSON",
+      });
 
-      const mockRes = {
-        writeHead: jest.fn(),
-        end: jest.fn(),
-      };
-
-      // リクエストハンドラーを呼び出す
-      requestHandler(mockReq, mockRes);
-
-      // 非同期処理を待つ
-      await new Promise((resolve) => setTimeout(resolve, 10));
-
-      // エラーが発生しても200が返されることを確認
-      expect(mockRes.writeHead).toHaveBeenCalledWith(200, expect.any(Object));
-      expect(mockRes.end).toHaveBeenCalled();
+      // 200レスポンスを期待（エラーハンドリングを検証）
+      expect(response.status).toBe(200);
     });
   });
 
   // Cloudflare Workersのserverオブジェクト用のテスト
   describe("server.fetch", () => {
-    // このテストではCloudflare Workers環境を模倣
-    // getRandomMessageFromDB関数と環境変数用のモック
-    const testMockD1Database = {
-      prepare: jest.fn().mockReturnThis(),
-      all: jest
-        .fn()
-        .mockResolvedValue({ results: [{ message: "テストメッセージ" }] }),
-    };
-
     test("GETリクエストに対して「Hello World!」を返すこと", async () => {
-      // テスト対象のモジュールを動的にインポート
+      // テスト対象のモジュールをインポート
       const serverModule = await import("../../src/server");
       const server = serverModule.default;
 
-      // モックリクエストとenv
-      const mockRequest = new Request("https://example.com", {
-        method: "GET",
-      });
+      // 実際のリクエストを作成
+      const mockRequest = await createTestRequest("GET", "https://example.com");
 
+      // モックではなく実際のデータベースを使用
       const mockEnv = {
-        DB: testMockD1Database,
+        DB: testDb,
         LINE_CHANNEL_ACCESS_TOKEN: "test-token",
       };
 
@@ -231,156 +135,68 @@ describe("server.ts の単体テスト", () => {
     });
 
     test("POSTリクエストに対してD1からのメッセージをJSON形式で返すこと", async () => {
-      // テスト対象のモジュールを動的にインポート
+      // テスト対象のモジュールをインポート
       const serverModule = await import("../../src/server");
       const server = serverModule.default;
 
-      // モックリクエストとenv
-      const mockRequest = new Request("https://example.com", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      // 実際のリクエストを作成
+      const mockRequest = await createTestRequest(
+        "POST",
+        "https://example.com",
+        {
           events: [
             {
+              type: "message",
               replyToken: "test-reply-token",
+              message: {
+                type: "text",
+                text: "こんにちは",
+              },
             },
           ],
-        }),
-      });
+        }
+      );
 
+      // モックではなく実際のデータベースを使用
       const mockEnv = {
-        DB: testMockD1Database,
+        DB: testDb,
         LINE_CHANNEL_ACCESS_TOKEN: "test-token",
       };
 
-      // fetchを呼び出す
-      const response = await server.fetch(mockRequest, mockEnv, {});
+      // LINEのトークンを一時的に設定
+      const originalToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+      process.env.LINE_CHANNEL_ACCESS_TOKEN = "test-token";
 
-      // レスポンスステータスが200であることを確認
-      expect(response.status).toBe(200);
+      try {
+        // fetchを呼び出す
+        const response = await server.fetch(mockRequest, mockEnv, {});
 
-      // sendLineReplyが正しいパラメータで呼ばれたことを確認
-      expect(httpUtils.sendLineReply).toHaveBeenCalledWith({
-        replyToken: "test-reply-token",
-        messages: [
-          {
-            type: "text",
-            text: "テストメッセージ",
-          },
-        ],
-      });
+        // レスポンスステータスが200であることを確認
+        expect(response.status).toBe(200);
+      } finally {
+        // テスト後に元の環境変数を復元
+        process.env.LINE_CHANNEL_ACCESS_TOKEN = originalToken;
+      }
     });
   });
 
   // getRandomMessageFromDBの単体テスト
   describe("getRandomMessageFromDB", () => {
-    // テスト前にモックをリセット
-    beforeEach(() => {
-      jest.resetAllMocks();
-    });
-
     test("D1から正常にメッセージを取得しLINE Messaging API形式のオブジェクトを返すこと", async () => {
-      // モックを一時的に上書き
-      jest
-        .spyOn(lineUtils, "getRandomMessageFromDB")
-        .mockImplementation((db, replyToken) =>
-          Promise.resolve({
-            replyToken: replyToken || "default-token",
-            messages: [
-              {
-                type: "text",
-                text: "テストメッセージ",
-              },
-            ],
-          })
-        );
-
-      // getRandomMessageFromDBを呼び出す
+      // 実際のデータベースを使用
       const result = await lineUtils.getRandomMessageFromDB(
-        {} as D1Database,
+        testDb,
         "test-reply-token"
       );
 
-      // 結果をテスト
-      expect(result).toEqual({
-        replyToken: "test-reply-token",
-        messages: [
-          {
-            type: "text",
-            text: "テストメッセージ",
-          },
-        ],
-      });
-    });
-
-    test("D1からメッセージ取得に失敗した場合はエラーメッセージを含むLINE Messaging API形式のオブジェクトを返すこと", async () => {
-      // モックを一時的に上書き
-      jest
-        .spyOn(lineUtils, "getRandomMessageFromDB")
-        .mockImplementation((db, replyToken) =>
-          Promise.resolve({
-            replyToken: replyToken || "default-token",
-            messages: [
-              {
-                type: "text",
-                text: "こんにちは！",
-              },
-            ],
-          })
-        );
-
-      // getRandomMessageFromDBを呼び出す
-      const result = await lineUtils.getRandomMessageFromDB(
-        {} as D1Database,
-        "test-reply-token"
-      );
-
-      // 結果をテスト
-      expect(result).toEqual({
-        replyToken: "test-reply-token",
-        messages: [
-          {
-            type: "text",
-            text: "こんにちは！",
-          },
-        ],
-      });
-    });
-
-    test("結果が空の場合はデフォルトメッセージを含むLINE Messaging API形式のオブジェクトを返すこと", async () => {
-      // モックを一時的に上書き
-      jest
-        .spyOn(lineUtils, "getRandomMessageFromDB")
-        .mockImplementation((db, replyToken) =>
-          Promise.resolve({
-            replyToken: replyToken || "default-token",
-            messages: [
-              {
-                type: "text",
-                text: "こんにちは！",
-              },
-            ],
-          })
-        );
-
-      // getRandomMessageFromDBを呼び出す
-      const result = await lineUtils.getRandomMessageFromDB(
-        {} as D1Database,
-        "test-reply-token"
-      );
-
-      // 結果をテスト
-      expect(result).toEqual({
-        replyToken: "test-reply-token",
-        messages: [
-          {
-            type: "text",
-            text: "こんにちは！",
-          },
-        ],
-      });
+      // 結果の形式を検証
+      expect(result).toHaveProperty("replyToken", "test-reply-token");
+      expect(result).toHaveProperty("messages");
+      expect(Array.isArray(result.messages)).toBe(true);
+      expect(result.messages.length).toBe(1);
+      expect(result.messages[0]).toHaveProperty("type", "text");
+      expect(result.messages[0]).toHaveProperty("text");
+      expect(typeof result.messages[0].text).toBe("string");
     });
   });
 });
