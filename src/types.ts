@@ -21,24 +21,47 @@ export interface Message {
 export interface LineEvent {
   type: string;
   replyToken?: string;
-  message?: {
-    text: string;
-  };
-  source?: {
-    userId: string;
-  };
+  message?: LineMessage;
+  source?: LineSource;
+}
+
+// LINE メッセージの型定義
+export interface LineMessage {
+  type: string;
+  text: string;
+  id?: string;
+}
+
+// LINE ソースの型定義
+export interface LineSource {
+  type: "user" | "group" | "room";
+  userId?: string;
+  groupId?: string;
+  roomId?: string;
 }
 
 // LINE Messaging APIからのリクエストボディ型定義
 export interface LineRequestBody {
   events?: LineEvent[];
+  destination?: string;
 }
 
 // LINE Messaging APIへのレスポンス型定義
 export interface LineResponseBody {
   replyToken: string;
-  messages: {
-    type: string;
-    text: string;
-  }[];
+  messages: LineMessageContent[];
+}
+
+// LINE メッセージコンテンツの型定義
+export interface LineMessageContent {
+  type:
+    | "text"
+    | "template"
+    | "image"
+    | "video"
+    | "audio"
+    | "location"
+    | "sticker";
+  text?: string;
+  [key: string]: any; // その他のプロパティに対応
 }

@@ -1,13 +1,10 @@
-import { D1Database, Message, LineResponseBody } from "./types";
 import {
-  DEFAULT_MESSAGE,
-  CONTENT_TYPE_TEXT,
-  LINE_DUMMY_TOKEN,
-  ERROR_PARSING_JSON,
-  DB_QUERY_RANDOM_MESSAGE,
-  ERROR_FETCHING_MESSAGE,
-  ERROR_DB_CONNECTION,
-} from "./constants";
+  D1Database,
+  Message,
+  LineResponseBody,
+  LineMessageContent,
+} from "./types";
+import { DEFAULT_MESSAGE, CONTENT_TYPE, LINE, DB, ERROR } from "./constants";
 import { ServerResponse } from "http";
 
 /**
@@ -39,7 +36,7 @@ export const safeJsonParse = <T>(data: string): T | null => {
   try {
     return JSON.parse(data) as T;
   } catch (error) {
-    console.error(ERROR_PARSING_JSON, error);
+    console.error(ERROR.PARSING_JSON, error);
     return null;
   }
 };
@@ -55,7 +52,7 @@ export const sendResponse = (
   res: ServerResponse,
   status: number = 200,
   message: string | object = "",
-  headers: Record<string, string> = CONTENT_TYPE_TEXT
+  headers: Record<string, string> = CONTENT_TYPE.TEXT
 ): void => {
   res.writeHead(status, headers);
   res.end(typeof message === "string" ? message : JSON.stringify(message));
@@ -71,7 +68,7 @@ export const sendResponse = (
 export const createCloudflareResponse = (
   status: number = 200,
   message: string | object = "",
-  headers: Record<string, string> = CONTENT_TYPE_TEXT
+  headers: Record<string, string> = CONTENT_TYPE.TEXT
 ): Response => {
   const body = typeof message === "string" ? message : JSON.stringify(message);
   return new Response(body, {
@@ -88,16 +85,16 @@ export const createCloudflareResponse = (
  */
 export const createLineResponse = (
   text: string,
-  replyToken: string = LINE_DUMMY_TOKEN
+  replyToken: string = LINE.DUMMY_TOKEN
 ): LineResponseBody => {
+  const message: LineMessageContent = {
+    type: "text",
+    text: text,
+  };
+
   return {
     replyToken: replyToken,
-    messages: [
-      {
-        type: "text",
-        text: text,
-      },
-    ],
+    messages: [message],
   };
 };
 
@@ -108,10 +105,10 @@ export const createLineResponse = (
  */
 const getMessageFromDb = async (db: D1Database): Promise<string> => {
   try {
-    const { results } = await db.prepare(DB_QUERY_RANDOM_MESSAGE).all();
+    const { results } = await db.prepare(DB.QUERY.RANDOM_MESSAGE).all();
     return results && results.length > 0 ? results[0].message : DEFAULT_MESSAGE;
   } catch (error) {
-    console.error(ERROR_FETCHING_MESSAGE, error);
+    console.error(ERROR.FETCHING_MESSAGE, error);
     return formatErrorMessage(error);
   }
 };
@@ -124,10 +121,10 @@ const getMessageFromDb = async (db: D1Database): Promise<string> => {
  */
 export const getRandomMessageFromDB = async (
   db: D1Database,
-  replyToken: string = LINE_DUMMY_TOKEN
+  replyToken: string = LINE.DUMMY_TOKEN
 ): Promise<LineResponseBody> => {
   if (!db) {
-    console.error(ERROR_DB_CONNECTION);
+    console.error(ERROR.DB_CONNECTION);
     return createLineResponse(DEFAULT_MESSAGE, replyToken);
   }
 

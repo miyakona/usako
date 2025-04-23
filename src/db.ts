@@ -4,7 +4,7 @@ import * as path from "path";
 import * as sqlite3 from "sqlite3";
 import { open, Database } from "sqlite";
 import { safeOperation } from "./utils";
-import { DB_QUERY_RANDOM_MESSAGE } from "./constants";
+import { DB } from "./constants";
 
 /**
  * SQLiteデータベースを使用してクエリを実行する関数
@@ -70,15 +70,29 @@ const insertSampleData = async (
       "うさこだよ！",
     ];
 
-    // トランザクションを使用して複数のINSERTを効率的に実行
-    await db.run("BEGIN TRANSACTION");
-    const stmt = await db.prepare("INSERT INTO messages (message) VALUES (?)");
+    await safeOperation(
+      async () => {
+        // トランザクションを使用して複数のINSERTを効率的に実行
+        await db.run("BEGIN TRANSACTION");
+        try {
+          const stmt = await db.prepare(
+            "INSERT INTO messages (message) VALUES (?)"
+          );
 
-    for (const message of sampleMessages) {
-      await stmt.run(message);
-    }
+          for (const message of sampleMessages) {
+            await stmt.run(message);
+          }
 
-    await db.run("COMMIT");
+          await db.run("COMMIT");
+        } catch (error) {
+          // エラーが発生した場合はロールバック
+          await db.run("ROLLBACK");
+          throw error;
+        }
+      },
+      undefined,
+      "サンプルデータ挿入エラー"
+    );
   }
 };
 

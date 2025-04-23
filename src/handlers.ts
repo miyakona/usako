@@ -9,21 +9,14 @@ import {
   createCloudflareResponse,
   safeOperation,
 } from "./utils";
-import {
-  CONTENT_TYPE_JSON,
-  CONTENT_TYPE_TEXT,
-  ERROR_PROCESSING_LINE_EVENTS,
-  ERROR_POST_REQUEST,
-  ERROR_CLOUDFLARE_REQUEST,
-  LINE_DUMMY_TOKEN,
-} from "./constants";
+import { CONTENT_TYPE, ERROR, LINE } from "./constants";
 
 /**
  * GETリクエストのハンドラー
  * @param res レスポンスオブジェクト
  */
 export const handleGetRequest = (res: ServerResponse): void => {
-  sendResponse(res, 200, "Hello World!", CONTENT_TYPE_TEXT);
+  sendResponse(res, 200, "Hello World!", CONTENT_TYPE.TEXT);
 };
 
 /**
@@ -38,7 +31,7 @@ export const processLineEvents = async (
 ): Promise<LineResponseBody | Record<string, never>> => {
   if (body.events && Array.isArray(body.events)) {
     // replyTokenを取得（存在する場合）
-    const replyToken = body.events[0]?.replyToken || LINE_DUMMY_TOKEN;
+    const replyToken = body.events[0]?.replyToken || LINE.DUMMY_TOKEN;
     return await getRandomMessageFromDB(db, replyToken);
   }
   return {};
@@ -65,7 +58,7 @@ export const safeProcessLineEvents = async (
       return {};
     },
     {},
-    ERROR_PROCESSING_LINE_EVENTS
+    ERROR.PROCESSING_LINE_EVENTS
   );
 };
 
@@ -90,7 +83,7 @@ export const handlePostRequest = (
     const responseMessage = await safeOperation(
       async () => await safeProcessLineEvents(data, db),
       {},
-      ERROR_POST_REQUEST
+      ERROR.POST_REQUEST
     );
 
     const hasContent = Object.keys(responseMessage).length > 0;
@@ -98,7 +91,7 @@ export const handlePostRequest = (
       res,
       200,
       hasContent ? responseMessage : "",
-      hasContent ? CONTENT_TYPE_JSON : CONTENT_TYPE_TEXT
+      hasContent ? CONTENT_TYPE.JSON : CONTENT_TYPE.TEXT
     );
   });
 };
@@ -123,13 +116,13 @@ export const handleCloudflareRequest = async (
         return createCloudflareResponse(
           200,
           hasContent ? responseData : "",
-          hasContent ? CONTENT_TYPE_JSON : CONTENT_TYPE_TEXT
+          hasContent ? CONTENT_TYPE.JSON : CONTENT_TYPE.TEXT
         );
       },
       createCloudflareResponse(200, ""),
-      ERROR_CLOUDFLARE_REQUEST
+      ERROR.CLOUDFLARE_REQUEST
     );
   }
 
-  return createCloudflareResponse(200, "Hello World!", CONTENT_TYPE_TEXT);
+  return createCloudflareResponse(200, "Hello World!", CONTENT_TYPE.TEXT);
 };
