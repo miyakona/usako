@@ -16,7 +16,7 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy && wrangler d1 migrations apply usako-messages --remote",
     "e2e": "cucumber-js tests/e2e/features --require-module ts-node/register --require tests/e2e/step_definitions/**/*.ts --require tests/e2e/support/**/*.ts",
     "test:unit": "jest tests/unit",
     "test:all": "npm run test:unit && npm run e2e",

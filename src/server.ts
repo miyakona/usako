@@ -66,6 +66,7 @@ export const createRequestRouter = (db: D1Database): RequestHandler => {
 
 /**
  * テスト用にサーバーを起動する関数
+ * Node.js環境でのみ使用
  * @param port 使用するポート番号
  * @returns HTTPサーバーインスタンス
  */
