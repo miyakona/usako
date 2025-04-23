@@ -61,15 +61,21 @@ const insertSampleData = async (
 ): Promise<void> => {
   const count = await db.get("SELECT COUNT(*) as count FROM messages");
   if (count.count === 0) {
+    const sampleMessages = [
+      "こんにちは！",
+      "元気ですか？",
+      "何かお手伝いできることはありますか？",
+      "素敵な一日をお過ごしください",
+      "うさこだよ！",
+    ];
+
     // トランザクションを使用して複数のINSERTを効率的に実行
     await db.run("BEGIN TRANSACTION");
-
     const stmt = await db.prepare("INSERT INTO messages (message) VALUES (?)");
-    await stmt.run("こんにちは！");
-    await stmt.run("元気ですか？");
-    await stmt.run("何かお手伝いできることはありますか？");
-    await stmt.run("素敵な一日をお過ごしください");
-    await stmt.run("うさこだよ！");
+
+    for (const message of sampleMessages) {
+      await stmt.run(message);
+    }
 
     await db.run("COMMIT");
   }
@@ -85,17 +91,7 @@ const createD1Interface = (db: Database<sqlite3.Database>): D1Database => {
     prepare: (query: string) => {
       return {
         all: async () => {
-          let results: any[] = [];
-
-          if (query.includes("ORDER BY RANDOM() LIMIT 1")) {
-            results = await executeQuery(
-              db,
-              "SELECT message FROM messages ORDER BY RANDOM() LIMIT 1"
-            );
-          } else {
-            results = await executeQuery(db, query);
-          }
-
+          const results = await executeQuery(db, query);
           return { results };
         },
       };

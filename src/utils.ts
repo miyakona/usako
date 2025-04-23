@@ -34,6 +34,25 @@ export const sendResponse = (
 };
 
 /**
+ * Cloudflare Workersのレスポンスを作成する共通関数
+ * @param status ステータスコード
+ * @param message メッセージまたはJSONオブジェクト
+ * @param headers ヘッダー
+ * @returns Responseオブジェクト
+ */
+export const createCloudflareResponse = (
+  status: number = 200,
+  message: string | object = "",
+  headers: Record<string, string> = CONTENT_TYPE_TEXT
+): Response => {
+  const body = typeof message === "string" ? message : JSON.stringify(message);
+  return new Response(body, {
+    status,
+    headers,
+  });
+};
+
+/**
  * LINE Messaging API形式のレスポンス本文を作成する関数
  * @param text メッセージテキスト
  * @param replyToken 返信用トークン

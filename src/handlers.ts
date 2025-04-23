@@ -6,6 +6,7 @@ import {
   createLineResponse,
   safeJsonParse,
   sendResponse,
+  createCloudflareResponse,
 } from "./utils";
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT } from "./constants";
 
@@ -80,14 +81,14 @@ export const handlePostRequest = (
   req.on("end", async () => {
     try {
       const responseMessage = await safeProcessLineEvents(data, db);
+      const hasContent = Object.keys(responseMessage).length > 0;
 
-      if (Object.keys(responseMessage).length > 0) {
-        sendResponse(res, 200, responseMessage, CONTENT_TYPE_JSON);
-        return;
-      }
-
-      // JSON解析エラーを含め、常に200を返す
-      sendResponse(res, 200);
+      sendResponse(
+        res,
+        200,
+        hasContent ? responseMessage : "",
+        hasContent ? CONTENT_TYPE_JSON : CONTENT_TYPE_TEXT
+      );
     } catch (error) {
       console.error("Error in POST request handler:", error);
       // エラーが発生しても200で返す（テスト仕様に合わせる）
@@ -110,24 +111,19 @@ export const handleCloudflareRequest = async (
     try {
       const body = await request.json();
       const responseData = await safeProcessLineEvents(body, env.DB);
+      const hasContent = Object.keys(responseData).length > 0;
 
-      if (Object.keys(responseData).length > 0) {
-        return new Response(JSON.stringify(responseData), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-      // 処理結果がない場合は空レスポンス
-      return new Response("", { status: 200 });
+      return createCloudflareResponse(
+        200,
+        hasContent ? responseData : "",
+        hasContent ? CONTENT_TYPE_JSON : CONTENT_TYPE_TEXT
+      );
     } catch (error) {
       console.error("Error handling POST request:", error);
       // エラーが発生しても200で返す（テスト仕様に合わせる）
-      return new Response("", { status: 200 });
+      return createCloudflareResponse(200, "");
     }
   }
 
-  return new Response("Hello World!", {
-    status: 200,
-    headers: CONTENT_TYPE_TEXT,
-  });
+  return createCloudflareResponse(200, "Hello World!", CONTENT_TYPE_TEXT);
 };
