@@ -1,5 +1,5 @@
 import { D1Database } from "./types";
-import { safeOperation } from "./utils";
+import { safeOperation } from "./utils/error";
 import { DB } from "./constants";
 
 // 環境チェック用の関数
