@@ -25,26 +25,24 @@ const executeQuery = async (
 };
 
 /**
- * ローカル環境用のD1データベースを作成する関数
- * @returns D1データベースインターフェースの実装オブジェクト
+ * データベースファイルのパスを取得する関数
+ * @returns データベースファイルのパス
  */
-export const createD1Database = async (): Promise<D1Database> => {
-  // データベースディレクトリの作成（存在しない場合）
+const getDatabasePath = (): string => {
   const dbDir = path.join(process.cwd(), ".wrangler", "local");
   if (!fs.existsSync(dbDir)) {
     fs.mkdirSync(dbDir, { recursive: true });
   }
+  return path.join(dbDir, "usako-messages.sqlite");
+};
 
-  // データベースファイルのパス
-  const dbPath = path.join(dbDir, "usako-messages.sqlite");
-
-  // SQLiteデータベースを開く（なければ作成）
-  const db = await open({
-    filename: dbPath,
-    driver: sqlite3.Database,
-  });
-
-  // テーブルが存在しない場合は作成し、初期データを挿入
+/**
+ * データベーステーブルを初期化する関数
+ * @param db SQLiteデータベース
+ */
+const initializeDatabaseTables = async (
+  db: Database<sqlite3.Database>
+): Promise<void> => {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,8 +50,15 @@ export const createD1Database = async (): Promise<D1Database> => {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
   `);
+};
 
-  // データが存在しない場合のみ初期データを挿入
+/**
+ * データベースにサンプルデータを挿入する関数
+ * @param db SQLiteデータベース
+ */
+const insertSampleData = async (
+  db: Database<sqlite3.Database>
+): Promise<void> => {
   const count = await db.get("SELECT COUNT(*) as count FROM messages");
   if (count.count === 0) {
     await db.exec(`
@@ -64,8 +69,14 @@ export const createD1Database = async (): Promise<D1Database> => {
       INSERT INTO messages (message) VALUES ('うさこだよ！');
     `);
   }
+};
 
-  // D1データベースインターフェースに合わせた実装を返す
+/**
+ * D1データベースインターフェースの実装を作成する関数
+ * @param db SQLiteデータベース
+ * @returns D1データベースインターフェースの実装オブジェクト
+ */
+const createD1Interface = (db: Database<sqlite3.Database>): D1Database => {
   return {
     prepare: (query: string) => {
       return {
@@ -86,4 +97,28 @@ export const createD1Database = async (): Promise<D1Database> => {
       };
     },
   };
+};
+
+/**
+ * ローカル環境用のD1データベースを作成する関数
+ * @returns D1データベースインターフェースの実装オブジェクト
+ */
+export const createD1Database = async (): Promise<D1Database> => {
+  // データベースファイルのパスを取得
+  const dbPath = getDatabasePath();
+
+  // SQLiteデータベースを開く（なければ作成）
+  const db = await open({
+    filename: dbPath,
+    driver: sqlite3.Database,
+  });
+
+  // テーブルの初期化
+  await initializeDatabaseTables(db);
+
+  // サンプルデータの挿入
+  await insertSampleData(db);
+
+  // D1インターフェースを返す
+  return createD1Interface(db);
 };

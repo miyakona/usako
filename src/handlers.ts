@@ -65,19 +65,27 @@ export const processLineEvents = async (
 };
 
 /**
- * POSTリクエストのデータを処理する関数
- * @param data リクエストボディ
+ * POSTリクエストのデータを安全に処理する共通関数
+ * @param body LINEリクエストボディまたは文字列
  * @param db D1データベース
  * @returns 処理結果のJSONオブジェクト
  */
-export const processPostRequestData = async (
-  data: string,
+export const safeProcessLineEvents = async (
+  body: LineRequestBody | string,
   db: D1Database
 ): Promise<LineResponseBody | Record<string, never>> => {
-  const body = safeJsonParse<LineRequestBody>(data);
-  if (body) {
-    return await processLineEvents(body, db);
+  try {
+    // 文字列の場合はJSONパース
+    const parsedBody =
+      typeof body === "string" ? safeJsonParse<LineRequestBody>(body) : body;
+
+    if (parsedBody) {
+      return await processLineEvents(parsedBody, db);
+    }
+  } catch (error) {
+    console.error("Error processing LINE events:", error);
   }
+
   return {};
 };
 
@@ -100,7 +108,7 @@ export const handlePostRequest = (
 
   req.on("end", async () => {
     try {
-      const responseMessage = await processPostRequestData(data, db);
+      const responseMessage = await safeProcessLineEvents(data, db);
 
       if (Object.keys(responseMessage).length > 0) {
         sendResponse(res, 200, responseMessage, CONTENT_TYPE_JSON);
@@ -129,8 +137,8 @@ export const handleCloudflareRequest = async (
 ): Promise<Response> => {
   if (request.method === "POST") {
     try {
-      const body = (await request.json()) as LineRequestBody;
-      const responseData = await processLineEvents(body, env.DB);
+      const body = await request.json();
+      const responseData = await safeProcessLineEvents(body, env.DB);
 
       if (Object.keys(responseData).length > 0) {
         return new Response(JSON.stringify(responseData), {

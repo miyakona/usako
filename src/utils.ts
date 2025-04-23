@@ -29,10 +29,8 @@ export const createLineResponse = (
  */
 const getMessageFromDb = async (db: D1Database): Promise<string> => {
   try {
-    const { results } = await db
-      .prepare("SELECT message FROM messages ORDER BY RANDOM() LIMIT 1")
-      .all();
-
+    const query = "SELECT message FROM messages ORDER BY RANDOM() LIMIT 1";
+    const { results } = await db.prepare(query).all();
     return results && results.length > 0 ? results[0].message : DEFAULT_MESSAGE;
   } catch (error) {
     console.error("Error fetching message from DB:", error);
@@ -50,8 +48,18 @@ export const getRandomMessageFromDB = async (
   db: D1Database,
   replyToken: string = "dummy-token"
 ): Promise<LineResponseBody> => {
-  const messageText = await getMessageFromDb(db);
-  return createLineResponse(messageText, replyToken);
+  if (!db) {
+    console.error("Database connection is null or undefined");
+    return createLineResponse(DEFAULT_MESSAGE, replyToken);
+  }
+
+  try {
+    const messageText = await getMessageFromDb(db);
+    return createLineResponse(messageText, replyToken);
+  } catch (error) {
+    console.error("Error getting random message:", error);
+    return createLineResponse(DEFAULT_MESSAGE, replyToken);
+  }
 };
 
 /**
