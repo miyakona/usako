@@ -8,8 +8,10 @@ alwaysApply: true
 # 前提
 - LINE の webhook URL は https://usako.miyakona38572.workers.dev/ を指定しています
 - [main.js](mdc:main.js), `classes/*`, `tasks/*` は GAS で動作する想定のファイルです。 cloudflare worker や cloudflare D1 とは関係ありません。
+- このプロジェクトは github 上の public なリポジトリで管理されます
 
 # 守ってほしいこと
 - ソースコードを変更した際、必ず `npm run test:all` 全てのテストが pass するのを確認すること
 - LINE Messaging API を利用する箇所では、リファレンス（https://developers.line.biz/ja/reference/messaging-api/）に準拠した実装を行うこと
 - [main.js](mdc:main.js) と classes/* と tasks/* は変更しないこと。これらのテストも不要です
+- 機密情報はハードコーディングしないでください
