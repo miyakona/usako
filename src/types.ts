@@ -16,3 +16,29 @@ export interface Env {
 export interface Message {
   message: string;
 }
+
+// LINE Messaging APIからのイベント型定義
+export interface LineEvent {
+  type: string;
+  replyToken?: string;
+  message?: {
+    text: string;
+  };
+  source?: {
+    userId: string;
+  };
+}
+
+// LINE Messaging APIからのリクエストボディ型定義
+export interface LineRequestBody {
+  events?: LineEvent[];
+}
+
+// LINE Messaging APIへのレスポンス型定義
+export interface LineResponseBody {
+  replyToken: string;
+  messages: {
+    type: string;
+    text: string;
+  }[];
+}

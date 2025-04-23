@@ -1,28 +1,12 @@
 import { IncomingMessage, ServerResponse } from "http";
-import { Env, D1Database, Message } from "./types";
+import { Env, D1Database, LineRequestBody, LineResponseBody } from "./types";
 import {
   getRandomMessageFromDB,
   safeJsonParse,
   formatErrorMessage,
+  createLineResponse,
 } from "./utils";
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT } from "./constants";
-
-// LINE Messaging APIからのイベント型定義
-interface LineEvent {
-  type: string;
-  replyToken?: string;
-  message?: {
-    text: string;
-  };
-  source?: {
-    userId: string;
-  };
-}
-
-// LINE Messaging APIからのリクエストボディ型定義
-interface LineRequestBody {
-  events?: LineEvent[];
-}
 
 /**
  * レスポンスを返す共通関数
@@ -58,7 +42,7 @@ export const handleGetRequest = (res: ServerResponse): void => {
 export const processPostRequestData = async (
   data: string,
   db: D1Database
-): Promise<object> => {
+): Promise<LineResponseBody | Record<string, never>> => {
   const body = safeJsonParse<LineRequestBody>(data);
 
   if (body && body.events && Array.isArray(body.events)) {

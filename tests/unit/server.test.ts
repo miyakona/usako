@@ -1,5 +1,6 @@
 import { createServer } from "http";
-import { startServer, getRandomMessageFromDB } from "../../src/server";
+import { startServer } from "../../src/server";
+import { getRandomMessageFromDB } from "../../src/utils";
 import * as http from "http";
 
 // getRandomMessageFromDB関数と環境変数用のモック

@@ -8,6 +8,7 @@ export interface CustomWorld extends World {
   apiContext?: APIRequestContext;
   response?: APIResponse;
   baseURL: string;
+  testError?: Error;
 }
 
 /**
@@ -17,6 +18,7 @@ class PlaywrightWorld extends World implements CustomWorld {
   baseURL: string;
   apiContext?: APIRequestContext;
   response?: APIResponse;
+  testError?: Error;
 
   constructor(options: IWorldOptions) {
     super(options);

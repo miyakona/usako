@@ -11,7 +11,6 @@ import {
   handlePostRequest,
   handleCloudflareRequest,
 } from "./handlers";
-import { getRandomMessageFromDB } from "./utils";
 import { createD1Database } from "./db";
 
 /**
@@ -35,12 +34,24 @@ const server = {
  */
 export const createRequestRouter = (db: D1Database): RequestHandler => {
   return (req, res) => {
-    if (req.method === "POST" && req.url === "/") {
+    // URLを正規化
+    const url = req.url || "/";
+
+    // POSTリクエストの処理
+    if (req.method === "POST") {
       handlePostRequest(req, res, db);
       return;
     }
 
-    handleGetRequest(res);
+    // GETリクエストの処理
+    if (req.method === "GET") {
+      handleGetRequest(res);
+      return;
+    }
+
+    // サポートされていないメソッドには405を返す
+    res.writeHead(405, { "Content-Type": "text/plain" });
+    res.end("Method Not Allowed");
   };
 };
 
@@ -65,8 +76,5 @@ export function startServer(port = DEFAULT_PORT): HttpServer {
 
   return httpServer;
 }
-
-// 以前のバージョンとの互換性のためにエクスポート
-export { getRandomMessageFromDB };
 
 export default server;

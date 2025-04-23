@@ -1,5 +1,26 @@
-import { D1Database, Message } from "./types";
+import { D1Database, Message, LineResponseBody } from "./types";
 import { DEFAULT_MESSAGE } from "./constants";
+
+/**
+ * LINE Messaging API形式のレスポンス本文を作成する関数
+ * @param text メッセージテキスト
+ * @param replyToken 返信用トークン
+ * @returns LINE Messaging API形式のレスポンス本文
+ */
+export const createLineResponse = (
+  text: string,
+  replyToken: string = "dummy-token"
+): LineResponseBody => {
+  return {
+    replyToken: replyToken,
+    messages: [
+      {
+        type: "text",
+        text: text,
+      },
+    ],
+  };
+};
 
 /**
  * D1からランダムなメッセージを取得し、LINE Messaging API形式のJSONオブジェクトを返す
@@ -10,7 +31,7 @@ import { DEFAULT_MESSAGE } from "./constants";
 export const getRandomMessageFromDB = async (
   db: D1Database,
   replyToken: string = "dummy-token"
-): Promise<object> => {
+): Promise<LineResponseBody> => {
   try {
     // ランダムな1つのメッセージを取得
     const { results } = await db
@@ -22,27 +43,11 @@ export const getRandomMessageFromDB = async (
       results && results.length > 0 ? results[0].message : DEFAULT_MESSAGE;
 
     // LINE Messaging API形式のJSONオブジェクトを作成
-    return {
-      replyToken: replyToken,
-      messages: [
-        {
-          type: "text",
-          text: messageText,
-        },
-      ],
-    };
+    return createLineResponse(messageText, replyToken);
   } catch (error) {
     console.error("Error fetching message from DB:", error);
     // エラーの場合もLINE Messaging API形式のJSONオブジェクトを返す
-    return {
-      replyToken: replyToken,
-      messages: [
-        {
-          type: "text",
-          text: formatErrorMessage(error),
-        },
-      ],
-    };
+    return createLineResponse(formatErrorMessage(error), replyToken);
   }
 };
 
