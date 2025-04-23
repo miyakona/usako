@@ -2,5 +2,12 @@
   "name": "usako",
   "compatibility_date": "2025-04-22",
   "main": "src/server.ts",
-  "compatibility_flags": ["nodejs_compat"]
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "usako-messages",
+      "database_id": "your-database-id"
+    }
+  ]
 } 
