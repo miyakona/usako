@@ -3,9 +3,10 @@ import { request } from "@playwright/test";
 import { startServer } from "../../../src/server";
 import { CustomWorld } from "./world";
 import * as http from "http";
+import { Server } from "http";
 
 // テスト用サーバーのインスタンス
-let server: ReturnType<typeof startServer>;
+let server: Server;
 
 /**
  * テストスイート開始前にサーバーを起動する
@@ -23,7 +24,7 @@ BeforeAll(async function () {
     console.log(
       "既存のサーバーは検出されませんでした。新しいサーバーを起動します。"
     );
-    server = startServer();
+    server = await startServer();
     console.log("テスト用サーバーを起動しました");
   }
 });

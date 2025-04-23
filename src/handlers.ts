@@ -2,11 +2,24 @@ import { IncomingMessage, ServerResponse } from "http";
 import { Env, D1Database, LineRequestBody, LineResponseBody } from "./types";
 import {
   getRandomMessageFromDB,
-  safeJsonParse,
   formatErrorMessage,
   createLineResponse,
 } from "./utils";
 import { CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT } from "./constants";
+
+/**
+ * JSONを安全にパースする関数
+ * @param data パースする文字列
+ * @returns パース結果またはnull
+ */
+const safeJsonParse = <T>(data: string): T | null => {
+  try {
+    return JSON.parse(data) as T;
+  } catch (error) {
+    console.error("Error parsing JSON:", error);
+    return null;
+  }
+};
 
 /**
  * レスポンスを返す共通関数

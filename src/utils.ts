@@ -61,17 +61,3 @@ export const formatErrorMessage = (error: unknown): string => {
     ? `エラーが発生しました: ${error.message}`
     : `エラーが発生しました: ${String(error)}`;
 };
-
-/**
- * JSONを安全にパースする関数
- * @param data パースする文字列
- * @returns パース結果またはnull
- */
-export const safeJsonParse = <T>(data: string): T | null => {
-  try {
-    return JSON.parse(data) as T;
-  } catch (error) {
-    console.error("Error parsing JSON:", error);
-    return null;
-  }
-};
